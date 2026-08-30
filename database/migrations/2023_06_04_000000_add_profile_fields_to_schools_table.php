@@ -11,10 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('schools')) {
+            return;
+        }
+
         Schema::table('schools', function (Blueprint $table) {
-            $table->string('tagline')->nullable()->after('name');
-            $table->text('about')->nullable()->after('address');
-            $table->string('website')->nullable()->after('phone');
+            if (!Schema::hasColumn('schools', 'tagline')) {
+                $table->string('tagline')->nullable()->after('name');
+            }
+            if (!Schema::hasColumn('schools', 'about')) {
+                $table->text('about')->nullable()->after('address');
+            }
+            if (!Schema::hasColumn('schools', 'website')) {
+                $table->string('website')->nullable()->after('phone');
+            }
         });
     }
 
@@ -23,8 +33,16 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('schools')) {
+            return;
+        }
+
         Schema::table('schools', function (Blueprint $table) {
-            $table->dropColumn(['tagline', 'about', 'website']);
+            foreach (['tagline', 'about', 'website'] as $column) {
+                if (Schema::hasColumn('schools', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
         });
     }
-}; 
+};

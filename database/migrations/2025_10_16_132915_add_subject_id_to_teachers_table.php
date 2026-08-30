@@ -8,14 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('teachers') || Schema::hasColumn('teachers', 'subject_id')) {
+            return;
+        }
+
         Schema::table('teachers', function (Blueprint $table) {
-            // Add subject_id as unsignedBigInteger before the 'subject' column
-            $table->unsignedBigInteger('subject_id')->nullable()->before('subject');
+            $table->unsignedBigInteger('subject_id')->nullable();
         });
     }
 
     public function down(): void
     {
+        if (!Schema::hasTable('teachers') || !Schema::hasColumn('teachers', 'subject_id')) {
+            return;
+        }
+
         Schema::table('teachers', function (Blueprint $table) {
             // Remove subject_id if we rollback
             $table->dropColumn('subject_id');

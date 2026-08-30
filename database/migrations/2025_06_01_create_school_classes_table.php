@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('school_classes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained()->onDelete('cascade');
-            $table->foreignId('section_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->integer('total_capacity')->default(30);
             $table->boolean('status')->default(true);
@@ -32,4 +31,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('school_classes');
     }
-}; 
+};

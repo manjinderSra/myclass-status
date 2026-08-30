@@ -12,14 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Ensure we have the correct structure for user_roles table
-        // First, check if the table exists
         if (Schema::hasTable('user_roles')) {
-            // Drop and recreate the table to ensure it has the correct structure
-            Schema::dropIfExists('user_roles');
+            return;
         }
-        
-        // Create the table with the correct structure
+
         Schema::create('user_roles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');

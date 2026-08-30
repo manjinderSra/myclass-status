@@ -11,12 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('hostel_room_types', function (Blueprint $table) {
+        if (Schema::hasTable('hostels')) {
+            return;
+        }
+
+        Schema::create('hostels', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained()->onDelete('cascade');
             $table->string('name');
+            $table->enum('type', ['Boys', 'Girls', 'Co-ed'])->default('Boys');
+            $table->text('address')->nullable();
+            $table->integer('intake')->default(0); // Total capacity
             $table->text('description')->nullable();
-            $table->decimal('price', 10, 2)->default(0.00);
             $table->boolean('status')->default(true);
             $table->timestamps();
             
@@ -30,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('hostel_room_types');
+        Schema::dropIfExists('hostels');
     }
 }; 

@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('rule_categories')) {
+            return;
+        }
+
         Schema::create('rule_categories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained()->onDelete('cascade');
@@ -27,4 +31,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('rule_categories');
     }
-}; 
+};

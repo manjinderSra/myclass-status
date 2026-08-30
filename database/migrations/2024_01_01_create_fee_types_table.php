@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('fee_types')) {
+            return;
+        }
+
         Schema::create('fee_types', function (Blueprint $table) {
             $table->id();
             $table->string('unique_id', 10)->unique();
@@ -32,4 +36,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('fee_types');
     }
-}; 
+};

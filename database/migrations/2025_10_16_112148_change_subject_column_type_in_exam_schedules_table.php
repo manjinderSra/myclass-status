@@ -10,6 +10,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('exam_schedules')) {
+            return;
+        }
+
         // Step 1: Add new nullable subject_id column
         Schema::table('exam_schedules', function (Blueprint $table) {
             $table->unsignedBigInteger('subject_id')->nullable()->after('section');
@@ -38,6 +42,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (!Schema::hasTable('exam_schedules')) {
+            return;
+        }
+
         // Reverse: Add old varchar column
         Schema::table('exam_schedules', function (Blueprint $table) {
             $table->string('subject', 255)->after('section');

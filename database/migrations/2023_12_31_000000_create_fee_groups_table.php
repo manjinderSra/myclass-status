@@ -11,19 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('hostels', function (Blueprint $table) {
+        if (Schema::hasTable('fee_groups')) {
+            return;
+        }
+
+        Schema::create('fee_groups', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_id')->constrained()->onDelete('cascade');
+            $table->foreignId('school_id')->constrained('schools')->onDelete('cascade');
             $table->string('name');
-            $table->enum('type', ['Boys', 'Girls', 'Co-ed'])->default('Boys');
-            $table->text('address')->nullable();
-            $table->integer('intake')->default(0); // Total capacity
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
-            
-            // Add unique constraint for school_id and name combination
-            $table->unique(['school_id', 'name']);
         });
     }
 
@@ -32,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('hostels');
+        Schema::dropIfExists('fee_groups');
     }
-}; 
+};

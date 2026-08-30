@@ -8,14 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('teachers') || Schema::hasColumn('teachers', 'subject')) {
+            return;
+        }
+
         Schema::table('teachers', function (Blueprint $table) {
-            // Add the column back
-            $table->string('subject', 255)->nullable()->after('some_column'); // replace 'some_column' with the column after which you want to add it
+            $table->string('subject', 255)->nullable();
         });
     }
 
     public function down(): void
     {
+        if (!Schema::hasTable('teachers') || !Schema::hasColumn('teachers', 'subject')) {
+            return;
+        }
+
         Schema::table('teachers', function (Blueprint $table) {
             // Drop the column if rollback
             $table->dropColumn('subject');

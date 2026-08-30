@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('exam_schedules')) {
+            return;
+        }
+
         Schema::table('exam_schedules', function (Blueprint $table) {
             // Drop old columns if they exist
             if (Schema::hasColumn('exam_schedules', 'exam_cancel')) {
@@ -33,6 +37,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('exam_schedules')) {
+            return;
+        }
+
         Schema::table('exam_schedules', function (Blueprint $table) {
             $table->dropColumn(['status', 'cancel_reason']);
 
