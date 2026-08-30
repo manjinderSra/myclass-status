@@ -92,7 +92,6 @@ Route::controller(App\Http\Controllers\SaasAdminController::class)->group(functi
 
         Route::get('/admin/plans', 'showPlans')->name('saasAdmin.plans');
         Route::get('/admin/features', 'showFeatures')->name('saasAdmin.features');
-        Route::get('/admin/subscriptions', 'showSubscriptions')->name('saasAdmin.subscriptions');
     });
 });
 
@@ -373,11 +372,6 @@ Route::middleware(['school.auth', 'subscription.feature:account_settings'])->gro
 
 Route::middleware(['school.auth', 'subscription.feature:notice_board'])->group(function () {
     Route::get('/school/noticeBoard', [App\Http\Controllers\Client\SchoolPanel\Announcements\NoticeController::class, 'index'])->name('school.noticeBoard');
-    // Notice routes for CRUD operations
-    Route::post('/notices', [App\Http\Controllers\Client\SchoolPanel\Announcements\NoticeController::class, 'store'])->name('school.notices.store');
-    Route::get('/notices/{id}/edit', [App\Http\Controllers\Client\SchoolPanel\Announcements\NoticeController::class, 'edit'])->name('school.notices.edit');
-    Route::put('/notices/{id}', [App\Http\Controllers\Client\SchoolPanel\Announcements\NoticeController::class, 'update'])->name('school.notices.update');
-    Route::delete('/notices/{id}', [App\Http\Controllers\Client\SchoolPanel\Announcements\NoticeController::class, 'destroy'])->name('school.notices.destroy');
 });
 
 // Teacher
@@ -488,7 +482,6 @@ Route::middleware(['school.auth', 'subscription.feature:hostel_management'])->gr
     Route::get('/school/hostel/{hostel}', [App\Http\Controllers\HostelController::class, 'show'])->name('school.hostel.show');
     Route::put('/school/hostel/{hostel}', [App\Http\Controllers\HostelController::class, 'update'])->name('school.hostel.update');
     Route::delete('/school/hostel/{hostel}', [App\Http\Controllers\HostelController::class, 'destroy'])->name('school.hostel.destroy');
-    Route::get('/school/api/active-hostels', [App\Http\Controllers\HostelController::class, 'getActiveHostels'])->name('school.api.active-hostels');
 
     Route::get('/school/roomType', [App\Http\Controllers\HostelRoomTypeController::class, 'index'])->name('school.roomType');
     Route::post('/school/roomType', [App\Http\Controllers\HostelRoomTypeController::class, 'store'])->name('school.roomType.store');
@@ -503,7 +496,6 @@ Route::middleware(['school.auth', 'subscription.feature:hostel_management'])->gr
     Route::get('/school/hostelRoom/{hostelRoom}', [App\Http\Controllers\HostelRoomController::class, 'show'])->name('school.hostelRoom.show');
     Route::put('/school/hostelRoom/{hostelRoom}', [App\Http\Controllers\HostelRoomController::class, 'update'])->name('school.hostelRoom.update');
     Route::delete('/school/hostelRoom/{hostelRoom}', [App\Http\Controllers\HostelRoomController::class, 'destroy'])->name('school.hostelRoom.destroy');
-    Route::get('/school/api/all-hostel-rooms', [App\Http\Controllers\HostelRoomController::class, 'getAllHostelRooms'])->name('school.api.all-hostel-rooms');
 });
 
 // Transport features with subscription check
@@ -522,7 +514,6 @@ Route::middleware(['school.auth', 'subscription.feature:transport_management'])-
     Route::get('/school/vehicle/{vehicle}', [App\Http\Controllers\VehicleController::class, 'show'])->name('school.vehicle.show');
     Route::put('/school/vehicle/{vehicle}', [App\Http\Controllers\VehicleController::class, 'update'])->name('school.vehicle.update');
     Route::delete('/school/vehicle/{vehicle}', [App\Http\Controllers\VehicleController::class, 'destroy'])->name('school.vehicle.destroy');
-    Route::get('/school/api/all-vehicles', [App\Http\Controllers\VehicleController::class, 'getAllVehicles'])->name('school.api.all-vehicles');
 
     // Routes
     Route::get('/school/routes', [App\Http\Controllers\RouteController::class, 'index'])->name('school.routes');
@@ -530,7 +521,6 @@ Route::middleware(['school.auth', 'subscription.feature:transport_management'])-
     Route::get('/school/route/{route}', [App\Http\Controllers\RouteController::class, 'show'])->name('school.route.show');
     Route::put('/school/route/{route}', [App\Http\Controllers\RouteController::class, 'update'])->name('school.route.update');
     Route::delete('/school/route/{route}', [App\Http\Controllers\RouteController::class, 'destroy'])->name('school.route.destroy');
-    Route::get('/school/api/all-routes', [App\Http\Controllers\RouteController::class, 'getAllRoutes'])->name('school.api.all-routes');
 
     // Vehicle Route Assignments (NEW)
     Route::get('/school/assignVehicle', [App\Http\Controllers\RouteAssignmentController::class, 'index'])->name('school.assignVehicle');
@@ -550,27 +540,6 @@ Route::middleware(['school.auth', 'subscription.feature:finance_management'])->g
     // Add this route to your existing collect fee routes
     Route::post('/collectFee/pay/{feeId}', [\App\Http\Controllers\CollectFeeController::class, 'payFee'])->name('collectFee.pay');
 
-    // 2. Filter Fee Masters (GET): AJAX for filtering fee types in the modal
-    Route::get('/collect-fees/filter-fee-masters', [\App\Http\Controllers\CollectFeeController::class, 'filterFeeMasters'])->name('school.assignFee.filterFeeMasters');
-
-    // 3. Filter Students (GET): AJAX for filtering students in the modal
-    Route::get('/collect-fees/filter-students', [\App\Http\Controllers\CollectFeeController::class, 'filterStudents'])->name('school.assignFee.filterStudents');
-
-    // 4. Store (POST): Handles assigning selected fees to selected students
-    Route::post('/school/assign-fees', [\App\Http\Controllers\CollectFeeController::class, 'store'])->name('school.assignFee.store');
-
-    // 5. Edit (GET): Fetches single assignment data for the edit modal
-    Route::get('/school/assign-fees/edit/{id}', [\App\Http\Controllers\CollectFeeController::class, 'edit'])->name('school.assignFee.edit');
-
-    // 6. Update (PUT/PATCH): Saves changes from the edit modal
-    Route::put('/school/assign-fees/{id}', [\App\Http\Controllers\CollectFeeController::class, 'update'])->name('school.assignFee.update');
-
-    // 7. Destroy (DELETE): Deletes a fee assignment
-    Route::delete('/school/assign-fees/{id}', [\App\Http\Controllers\CollectFeeController::class, 'destroy'])->name('school.assignFee.destroy');
-
-
-
-
     // Asign Fee
 
     // Route::get('/school/assignFee', function () {
@@ -585,7 +554,7 @@ Route::middleware(['school.auth', 'subscription.feature:finance_management'])->g
         Route::delete('/assign-fees/{id}', [AssignFeeController::class, 'destroy'])->name('school.assignFee.destroy');
 
         // New API routes for filtering
-        Route::get('/assign-fees/filter/students', [AssignFeeController::class, 'getFilteredStudents'])->name('school.assignFee.filterStudents.new');
+        Route::get('/assign-fees/filter/students', [AssignFeeController::class, 'getFilteredStudents'])->name('school.assignFee.filterStudents');
         Route::get('/assign-fees/filter/fee-masters', [AssignFeeController::class, 'getFilteredFeeMasters'])->name('school.assignFee.filterFeeMasters');
     });
 
@@ -610,9 +579,9 @@ Route::middleware(['school.auth', 'subscription.feature:finance_management'])->g
         Route::put('/school-panel/fees/fee-type/{id}', [FeeTypeController::class, 'updateFeeType'])->name('client.schoolPanel.feeType.update');
         Route::get('/{feeType}', [App\Http\Controllers\FeeTypeController::class, 'destroy'])->name('destroy');
 
-        Route::post('/bulk-update', [App\Http\Controllers\FeeTypeController::class, 'bulkUpdate'])->name('bulk-update');
-        Route::get('/export', [App\Http\Controllers\FeeTypeController::class, 'export'])->name('export');
-        Route::post('/import', [App\Http\Controllers\FeeTypeController::class, 'import'])->name('import');
+        Route::post('/bulk-update', [App\Http\Controllers\FeeTypeController::class, 'bulkUpdate'])->name('school-bulk-update');
+        Route::get('/export', [App\Http\Controllers\FeeTypeController::class, 'export'])->name('school-export');
+        Route::post('/import', [App\Http\Controllers\FeeTypeController::class, 'import'])->name('school-import');
     });
 
 
@@ -659,13 +628,13 @@ Route::get('/school/transactions', function () {
 })->name('school.transactions');
 
 
-Route::get('/school/students', [App\Http\Controllers\Client\SchoolPanel\Peoples\StudentController::class, 'index'])->name('school.students');
+Route::get('/school/students', [App\Http\Controllers\Client\SchoolPanel\Peoples\StudentController::class, 'index'])->name('school.students.legacy.index');
 Route::get('/school/teachers', [App\Http\Controllers\Client\SchoolPanel\Peoples\TeacherController::class, 'index'])->name('school.teachers');
 
 Route::put('/school/teachers-update/{id}', [App\Http\Controllers\Client\SchoolPanel\Peoples\TeacherController::class, 'updateWeb'])->name('school.teachers.update1');
 Route::get('/school/createStudent', function () {
     return view('client.schoolPanel.peoples.student.createStudent');
-})->name('school.createStudent');
+})->name('school.students.legacy.create');
 
 Route::get('/school/showStudent', function () {
     // Redirect to students list since no specific student was selected
@@ -704,11 +673,6 @@ Route::prefix('school')->group(function () {
 });
 
 
-
-Route::get('/school/books', [App\Http\Controllers\Client\SchoolPanel\LibraryController::class, 'index'])->name('school.books.index');
-Route::post('/school/books', [App\Http\Controllers\Client\SchoolPanel\LibraryController::class, 'store'])->name('school.books.store');
-Route::put('/school/books/{id}', [App\Http\Controllers\Client\SchoolPanel\LibraryController::class, 'update'])->name('school.books.update');
-Route::delete('/school/books/{id}', [App\Http\Controllers\Client\SchoolPanel\LibraryController::class, 'destroy'])->name('school.books.destroy');
 
 // Student details fetch for library
 Route::get('/school/library/fetch-student/{student_id}', [App\Http\Controllers\Client\SchoolPanel\LibraryController::class, 'fetchStudent'])->name('school.library.fetchStudent');
@@ -946,7 +910,7 @@ Route::middleware(['school.auth', 'subscription.feature:student_management'])->g
     // Route::get('/school/students/{id}/edit', [App\Http\Controllers\StudentController::class, 'edit'])->name('school.students.edit');
     // Route::put('/school/students/{id}', [App\Http\Controllers\StudentController::class, 'update'])->name('school.students.update');
     // Route::delete('/school/students/{id}', [App\Http\Controllers\Client\SchoolPanel\Peoples\StudentController::class, 'destroy'])->name('school.students.destroy');
-    Route::post('/school/students/{id}/reset-password', [App\Http\Controllers\Client\SchoolPanel\Peoples\StudentController::class, 'resetPassword'])->name('school.students.reset-password');
+    Route::post('/school/students/{id}/reset-password', [App\Http\Controllers\Client\SchoolPanel\Peoples\StudentController::class, 'resetPassword'])->name('school.students.legacy.reset-password');
     Route::post('/school/students/update-password', [App\Http\Controllers\Client\SchoolPanel\Peoples\StudentController::class, 'updatePassword'])->name('school.students.update-password');
 
     // Custom routes for our namespace controller
@@ -1470,7 +1434,6 @@ Route::middleware(['school.auth', 'subscription.feature:examination_management']
     Route::put('/exam-schedule/{examSchedule}', [ExamController::class, 'updateExamSchedule'])
         ->name('school.exam-schedules.update');
 
-    Route::get('/examdeleteSchedule/{id}', [ExamController::class, 'destroyExamSchedule'])->name('exam-schedules.destroy');
     Route::patch('/exam-schedules/{examSchedule}/cancel', [ExamController::class, 'cancelExam'])->name('exam-schedules.cancel');
 
 
