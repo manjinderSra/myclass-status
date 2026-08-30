@@ -5,32 +5,91 @@ ini_set('display_errors', '1');
 
 header('Content-Type: text/plain');
 
+/*
+|--------------------------------------------------------------------------
+| Catch fatal PHP errors
+|--------------------------------------------------------------------------
+*/
+
+register_shutdown_function(function () {
+    $error = error_get_last();
+
+    if ($error !== null) {
+        echo "\n\n========== FATAL ERROR ==========\n";
+        echo "MESSAGE: " . $error['message'] . "\n";
+        echo "FILE: " . $error['file'] . "\n";
+        echo "LINE: " . $error['line'] . "\n";
+        echo "=================================\n";
+    }
+});
+
 try {
+
     echo "STEP 1: PHP running\n";
 
-    $autoload = __DIR__ . '/../vendor/autoload.php';
+    /*
+    |--------------------------------------------------------------------------
+    | Create writable storage in Vercel /tmp
+    |--------------------------------------------------------------------------
+    */
 
-    if (!file_exists($autoload)) {
-        throw new Exception("vendor/autoload.php DOES NOT EXIST");
+    $storagePath = '/tmp/laravel-storage';
+
+    $directories = [
+        $storagePath,
+        $storagePath . '/app',
+        $storagePath . '/framework',
+        $storagePath . '/framework/cache',
+        $storagePath . '/framework/cache/data',
+        $storagePath . '/framework/sessions',
+        $storagePath . '/framework/testing',
+        $storagePath . '/framework/views',
+        $storagePath . '/logs',
+    ];
+
+    foreach ($directories as $directory) {
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
     }
 
-    echo "STEP 2: vendor/autoload.php found\n";
+    echo "STEP 2: /tmp storage ready\n";
 
-    require $autoload;
+    /*
+    |--------------------------------------------------------------------------
+    | Composer
+    |--------------------------------------------------------------------------
+    */
+
+    require __DIR__ . '/../vendor/autoload.php';
 
     echo "STEP 3: Composer loaded\n";
 
-    $bootstrap = __DIR__ . '/../bootstrap/app.php';
+    /*
+    |--------------------------------------------------------------------------
+    | Laravel
+    |--------------------------------------------------------------------------
+    */
 
-    if (!file_exists($bootstrap)) {
-        throw new Exception("bootstrap/app.php DOES NOT EXIST");
-    }
+    $app = require_once __DIR__ . '/../bootstrap/app.php';
 
-    echo "STEP 4: bootstrap/app.php found\n";
+    echo "STEP 4: Laravel application created\n";
 
-    $app = require_once $bootstrap;
+    /*
+    |--------------------------------------------------------------------------
+    | Tell Laravel to use Vercel writable storage
+    |--------------------------------------------------------------------------
+    */
 
-    echo "STEP 5: Laravel application created\n";
+    $app->useStoragePath($storagePath);
+
+    echo "STEP 5: Storage path changed to {$storagePath}\n";
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kernel
+    |--------------------------------------------------------------------------
+    */
 
     $kernel = $app->make(
         Illuminate\Contracts\Http\Kernel::class
@@ -42,9 +101,23 @@ try {
 
     echo "STEP 7: Request captured\n";
 
+    /*
+    |--------------------------------------------------------------------------
+    | Handle request
+    |--------------------------------------------------------------------------
+    */
+
     $response = $kernel->handle($request);
 
-    echo "STEP 8: Laravel handled request\n\n";
+    echo "STEP 8: Laravel handled request\n";
+
+    /*
+    |--------------------------------------------------------------------------
+    | Send actual response
+    |--------------------------------------------------------------------------
+    */
+
+    header_remove('Content-Type');
 
     $response->send();
 
@@ -54,11 +127,12 @@ try {
 
     http_response_code(500);
 
-    echo "\n\n========== ERROR ==========\n";
+    echo "\n\n========== LARAVEL ERROR ==========\n";
+    echo "TYPE: " . get_class($e) . "\n";
     echo "MESSAGE: " . $e->getMessage() . "\n";
     echo "FILE: " . $e->getFile() . "\n";
     echo "LINE: " . $e->getLine() . "\n";
-    echo "===========================\n";
+    echo "====================================\n";
 
     error_log($e->__toString());
 }
