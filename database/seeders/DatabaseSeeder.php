@@ -12,6 +12,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        if ($this->command->getLaravel()->environment('production')) {
+            $this->call(ProductionAdminSeeder::class);
+            return;
+        }
+
         // Deployments may invoke this seeder automatically. Demo data must be
         // explicitly enabled so a real database is never truncated/populated.
         if (!filter_var(env('SEED_DEMO_DATA', false), FILTER_VALIDATE_BOOL)) {
