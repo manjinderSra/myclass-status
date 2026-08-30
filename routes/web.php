@@ -585,7 +585,7 @@ Route::middleware(['school.auth', 'subscription.feature:finance_management'])->g
         Route::delete('/assign-fees/{id}', [AssignFeeController::class, 'destroy'])->name('school.assignFee.destroy');
 
         // New API routes for filtering
-        Route::get('/assign-fees/filter/students', [AssignFeeController::class, 'getFilteredStudents'])->name('school.assignFee.filterStudents');
+        Route::get('/assign-fees/filter/students', [AssignFeeController::class, 'getFilteredStudents'])->name('school.assignFee.filterStudents.new');
         Route::get('/assign-fees/filter/fee-masters', [AssignFeeController::class, 'getFilteredFeeMasters'])->name('school.assignFee.filterFeeMasters');
     });
 
