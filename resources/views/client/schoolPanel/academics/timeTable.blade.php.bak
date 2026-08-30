@@ -1,0 +1,2198 @@
+@include('client.schoolPanel.layout.header')
+@include('client.schoolPanel.layout.topbar')
+
+<div class="flex">
+    @include('client.schoolPanel.layout.sidebar')
+
+    <div class="flex-1 h-screen overflow-y-auto px-6 py-24 bg-gray-50">
+        <div class="flex items-center justify-between mb-2">
+            <h1 class="text-2xl font-semibold mb-6 text-gray-800">
+                Academics / <span class="text-l text-gray-500">Timetable</span>
+            </h1>
+        </div>
+
+        {{-- Header Section for Timetable --}}
+        <div class="bg-white rounded-lg shadow w-full p-6 transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="text-xl font-semibold text-gray-800">
+                    Timetable Management
+                    <p class="text-sm text-gray-500 mt-1">View and manage school timetables</p>
+                </div>
+
+                {{-- Right section: Filter Button and Add Timetable Button --}}
+                <div class="flex items-center space-x-3">
+                    {{-- Filter Button --}}
+                    <button id="openFilterTimetableModal" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition flex items-center">
+                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V19l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        Filter
+                    </button>
+                    {{-- Add Timetable Button --}}
+                    <button id="openAddTimetableModal" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        Add Timetable +
+                    </button>
+                </div>
+            </div>
+        </div>
+        {{-- End Header Section --}}
+
+        {{-- Timetable Grid View --}}
+        <div class="bg-white rounded-xl shadow-lg w-full p-6 mt-6 overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 text-left text-sm uppercase">
+                        <th class="px-4 py-2 font-semibold">Time Table</th>
+                        <th class="px-4 py-2 font-semibold">Monday</th>
+                        <th class="px-4 py-2 font-semibold">Tuesday</th>
+                        <th class="px-4 py-2 font-semibold">Wednesday</th>
+                        <th class="px-4 py-2 font-semibold">Thursday</th>
+                        <th class="px-4 py-2 font-semibold">Friday</th>
+                        <th class="px-4 py-2 font-semibold">Saturday</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-gray-700 divide-y divide-gray-200">
+                    @php
+                        $timeSlots = [
+                            '09:00 - 09:45 AM',
+                            '09:45 - 10:30 AM',
+                            '10:45 - 11:30 AM',
+                            '11:30 - 12:15 PM',
+                            '01:00 - 01:45 PM',
+                            '01:45 - 02:30 PM',
+                            '02:15 - 03:00 PM',
+                            '03:15 - 04:00 PM',
+                            '04:00 - 04:45 PM',
+                        ];
+                        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        // Example data structure for a single period (you'd fetch this from backend)
+                        $examplePeriod = [
+                            'subject' => 'Subject: Maths',
+                            'teacher' => 'Jacqueline'
+                        ];
+                    @endphp
+
+                    @foreach($timeSlots as $timeSlot)
+                        <tr>
+                            <td class="px-4 py-2 whitespace-nowrap font-medium text-gray-900">{{ $timeSlot }}</td>
+                            @foreach($days as $day)
+                                <td class="px-4 py-2">
+                                    {{-- Example Period Block (you'd dynamically populate this) --}}
+                                    @if(rand(0,1)) {{-- Randomly show a period for demonstration --}}
+                                        <div class="p-2 rounded-md {{
+                                            // Apply different background colors based on subject or random for visual variety
+                                            (strpos($examplePeriod['subject'], 'Maths') !== false) ? 'bg-blue-100' :
+                                            ((strpos($examplePeriod['subject'], 'Computer') !== false) ? 'bg-green-100' :
+                                            ((strpos($examplePeriod['subject'], 'Physics') !== false) ? 'bg-yellow-100' :
+                                            ((strpos($examplePeriod['subject'], 'English') !== false) ? 'bg-purple-100' :
+                                            ((strpos($examplePeriod['subject'], 'Spanish') !== false) ? 'bg-pink-100' :
+                                            ((strpos($examplePeriod['subject'], 'Chemistry') !== false) ? 'bg-red-100' : 'bg-gray-100')))))
+                                        }}">
+                                            <p class="text-xs text-gray-700 font-semibold mb-1">{{ substr($timeSlot, 0, strpos($timeSlot, ' - ')) }}</p>
+                                            <p class="text-sm font-medium text-gray-900">{{ $examplePeriod['subject'] }}</p>
+                                            <p class="text-xs text-gray-600">{{ $examplePeriod['teacher'] }}</p>
+                                            {{-- Optional: Edit/Delete buttons for each period --}}
+                                            <div class="flex justify-end mt-1 space-x-1">
+                                                <button class="text-blue-500 hover:text-blue-700 text-xs editTimetableEntryBtn" data-id="123">Edit</button>
+                                                <button class="text-red-500 hover:text-red-700 text-xs deleteTimetableEntryBtn" data-id="123">Delete</button>
+                                            </div>
+                                        </div>
+                                    @else
+                                        {{-- Empty slot or "No Class" --}}
+                                        <div class="p-2 text-center text-gray-400 text-xs">
+                                            No Class
+                                        </div>
+                                    @endif
+                                </td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Legend for Breaks --}}
+        <div class="flex justify-center space-x-6 mt-8 text-sm">
+            <div class="flex items-center">
+                <span class="w-4 h-4 rounded-full bg-blue-600 mr-2"></span>
+                <span>Morning Break</span>
+                <span class="ml-2 text-gray-600">09:00 to 10:45 AM</span>
+            </div>
+            <div class="flex items-center">
+                <span class="w-4 h-4 rounded-full bg-orange-500 mr-2"></span>
+                <span>Lunch</span>
+                <span class="ml-2 text-gray-600">12:00 to 01:00 PM</span>
+            </div>
+            <div class="flex items-center">
+                <span class="w-4 h-4 rounded-full bg-teal-500 mr-2"></span>
+                <span>Evening Break</span>
+                <span class="ml-2 text-gray-600">03:00 to 03:45 PM</span>
+            </div>
+        </div>
+
+        {{-- Filter Timetable Modal (based on Screenshot 2025-05-28 at 6.07.39 PM.png) --}}
+        <div id="filterTimetableModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-sm w-full p-6 relative">
+                <button id="closeFilterTimetableModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h2 class="text-xl font-semibold mb-6">Filter</h2>
+                <form id="filterTimetableForm">
+                    <div class="mb-4">
+                        <label for="filterClass" class="block text-gray-700 text-sm font-bold mb-2">Class</label>
+                        <select id="filterClass" name="filterClass" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select</option>
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-6">
+                        <label for="filterSection" class="block text-gray-700 text-sm font-bold mb-2">Section</label>
+                        <select id="filterSection" name="filterSection" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select</option>
+                            {{-- This will be populated via JavaScript based on selected class --}}
+                        </select>
+                    </div>
+
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" id="resetFilterTimetableBtn" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Reset</button>
+                        <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Apply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Add Timetable Modal (based on Screenshot 2025-05-28 at 6.08.09 PM.png) --}}
+        <div id="addTimetableModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-2xl w-full p-6 relative">
+                <button id="closeAddTimetableModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h2 class="text-xl font-semibold mb-4">Add Time Table</h2>
+                <form id="addTimetableForm" action="{{ route('school.timetable.store') }}" method="POST">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="addTimetableClass" class="block text-gray-700 text-sm font-bold mb-2">Class</label>
+                            <select id="addTimetableClass" name="class_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                                <option value="">Select</option>
+                                {{-- Will be populated by JavaScript --}}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="section" class="block text-sm font-semibold text-gray-700 mb-1">Section</label>
+                            <select id="section" name="section_id"
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-base transition duration-150 ease-in-out bg-white" required>
+                                <option value="">Select Section</option>
+                                {{-- Options will be populated by JavaScript --}}
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Day-wise timetable entry --}}
+                    <div class="mb-6">
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs" id="dayTabs">
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm active-tab" data-day="Monday">Monday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Tuesday">Tuesday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Wednesday">Wednesday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Thursday">Thursday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Friday">Friday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Saturday">Saturday</button>
+                            </nav>
+                        </div>
+                        
+
+                        <div id="dayContent" class="mt-4">
+                            {{-- Content for each day will be dynamically added/hidden --}}
+                            <div class="day-panel" id="panel-Monday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                    </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        Add New
+                                    </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                        </button>
+                                    </div>
+                                </div>
+                            <div class="day-panel hidden" id="panel-Tuesday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                        Add Extra
+                                </button>
+                                </div>
+                            </div>
+                            <div class="day-panel hidden" id="panel-Wednesday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="day-panel hidden" id="panel-Thursday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="day-panel hidden" id="panel-Friday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="day-panel hidden" id="panel-Saturday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4">
+                        <label class="inline-flex items-center mr-auto">
+                            <input type="checkbox" id="applyExtraToAll" class="form-checkbox h-5 w-5 text-blue-600">
+                            <span class="ml-2 text-sm text-gray-700">Apply extra to all</span>
+                        </label>
+                        <button type="button" id="cancelAddTimetableBtn" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+                        <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Add Time Table</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Delete Confirmation Modal (re-using student modal's concept) --}}
+        <div id="deleteTimetableEntryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-md w-full p-6 relative">
+                <h2 class="text-xl font-semibold mb-4">Confirm Delete</h2>
+                <p class="text-gray-700 mb-6">Are you sure you want to delete this timetable entry?</p>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="closeDeleteTimetableEntryModal" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+                    <button id="confirmDeleteTimetableEntryBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Add Confirmation Modal for Extra Fields --}}
+        <div id="extraFieldConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-md w-full p-6 relative">
+                <h2 class="text-xl font-semibold mb-4">Apply to All Days?</h2>
+                <p class="text-gray-700 mb-6">Would you like to apply this extra field (like break or lunch) to all days of the week?</p>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelExtraToAllBtn" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">No, Just This Day</button>
+                    <button id="confirmExtraToAllBtn" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Yes, Apply to All</button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Add Confirmation Modal for Regular Periods --}}
+        <div id="regularPeriodConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-md w-full p-6 relative">
+                <h2 class="text-xl font-semibold mb-4">Apply to All Days?</h2>
+                <p class="text-gray-700 mb-6">Would you like to apply this regular period to all days of the week?</p>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelRegularToAllBtn" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">No, Just This Day</button>
+                    <button id="confirmRegularToAllBtn" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Yes, Apply to All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@include('client.schoolPanel.layout.footer')
+
+{{-- Your custom script for this page --}}
+<script>
+    // Add direct event listener to the Add Timetable button
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded - adding direct event listener');
+        
+        document.getElementById('openAddTimetableModal').addEventListener('click', function() {
+            console.log('Button clicked via direct event listener');
+            document.getElementById('addTimetableModal').classList.remove('hidden');
+        });
+    });
+    
+    $(document).ready(function () {
+        // --- Filter Timetable Modal Logic ---
+        const filterTimetableModal = $('#filterTimetableModal');
+@include('client.schoolPanel.layout.header')
+@include('client.schoolPanel.layout.topbar')
+
+<div class="flex">
+    @include('client.schoolPanel.layout.sidebar')
+
+    <div class="flex-1 h-screen overflow-y-auto px-6 py-24 bg-gray-50">
+        <div class="flex items-center justify-between mb-2">
+            <h1 class="text-2xl font-semibold mb-6 text-gray-800">
+                Academics / <span class="text-l text-gray-500">Timetable</span>
+            </h1>
+        </div>
+
+        {{-- Header Section for Timetable --}}
+        <div class="bg-white rounded-lg shadow w-full p-6 transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="text-xl font-semibold text-gray-800">
+                    Timetable Management
+                    <p class="text-sm text-gray-500 mt-1">View and manage school timetables</p>
+                </div>
+
+                {{-- Right section: Filter Button and Add Timetable Button --}}
+                <div class="flex items-center space-x-3">
+                    {{-- Filter Button --}}
+                    <button id="openFilterTimetableModal" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition flex items-center">
+                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V19l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        Filter
+                    </button>
+                    {{-- Add Timetable Button --}}
+                    <button id="openAddTimetableModal" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        Add Timetable +
+                    </button>
+                </div>
+            </div>
+        </div>
+        {{-- End Header Section --}}
+
+        {{-- Timetable Grid View --}}
+        <div class="bg-white rounded-xl shadow-lg w-full p-6 mt-6 overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 text-left text-sm uppercase">
+                        <th class="px-4 py-2 font-semibold">Time Table</th>
+                        <th class="px-4 py-2 font-semibold">Monday</th>
+                        <th class="px-4 py-2 font-semibold">Tuesday</th>
+                        <th class="px-4 py-2 font-semibold">Wednesday</th>
+                        <th class="px-4 py-2 font-semibold">Thursday</th>
+                        <th class="px-4 py-2 font-semibold">Friday</th>
+                        <th class="px-4 py-2 font-semibold">Saturday</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-gray-700 divide-y divide-gray-200">
+                    @php
+                        $timeSlots = [
+                            '09:00 - 09:45 AM',
+                            '09:45 - 10:30 AM',
+                            '10:45 - 11:30 AM',
+                            '11:30 - 12:15 PM',
+                            '01:00 - 01:45 PM',
+                            '01:45 - 02:30 PM',
+                            '02:15 - 03:00 PM',
+                            '03:15 - 04:00 PM',
+                            '04:00 - 04:45 PM',
+                        ];
+                        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        // Example data structure for a single period (you'd fetch this from backend)
+                        $examplePeriod = [
+                            'subject' => 'Subject: Maths',
+                            'teacher' => 'Jacqueline'
+                        ];
+                    @endphp
+
+                    @foreach($timeSlots as $timeSlot)
+                        <tr>
+                            <td class="px-4 py-2 whitespace-nowrap font-medium text-gray-900">{{ $timeSlot }}</td>
+                            @foreach($days as $day)
+                                <td class="px-4 py-2">
+                                    {{-- Example Period Block (you'd dynamically populate this) --}}
+                                    @if(rand(0,1)) {{-- Randomly show a period for demonstration --}}
+                                        <div class="p-2 rounded-md {{
+                                            // Apply different background colors based on subject or random for visual variety
+                                            (strpos($examplePeriod['subject'], 'Maths') !== false) ? 'bg-blue-100' :
+                                            ((strpos($examplePeriod['subject'], 'Computer') !== false) ? 'bg-green-100' :
+                                            ((strpos($examplePeriod['subject'], 'Physics') !== false) ? 'bg-yellow-100' :
+                                            ((strpos($examplePeriod['subject'], 'English') !== false) ? 'bg-purple-100' :
+                                            ((strpos($examplePeriod['subject'], 'Spanish') !== false) ? 'bg-pink-100' :
+                                            ((strpos($examplePeriod['subject'], 'Chemistry') !== false) ? 'bg-red-100' : 'bg-gray-100')))))
+                                        }}">
+                                            <p class="text-xs text-gray-700 font-semibold mb-1">{{ substr($timeSlot, 0, strpos($timeSlot, ' - ')) }}</p>
+                                            <p class="text-sm font-medium text-gray-900">{{ $examplePeriod['subject'] }}</p>
+                                            <p class="text-xs text-gray-600">{{ $examplePeriod['teacher'] }}</p>
+                                            {{-- Optional: Edit/Delete buttons for each period --}}
+                                            <div class="flex justify-end mt-1 space-x-1">
+                                                <button class="text-blue-500 hover:text-blue-700 text-xs editTimetableEntryBtn" data-id="123">Edit</button>
+                                                <button class="text-red-500 hover:text-red-700 text-xs deleteTimetableEntryBtn" data-id="123">Delete</button>
+                                            </div>
+                                        </div>
+                                    @else
+                                        {{-- Empty slot or "No Class" --}}
+                                        <div class="p-2 text-center text-gray-400 text-xs">
+                                            No Class
+                                        </div>
+                                    @endif
+                                </td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Legend for Breaks --}}
+        <div class="flex justify-center space-x-6 mt-8 text-sm">
+            <div class="flex items-center">
+                <span class="w-4 h-4 rounded-full bg-blue-600 mr-2"></span>
+                <span>Morning Break</span>
+                <span class="ml-2 text-gray-600">09:00 to 10:45 AM</span>
+            </div>
+            <div class="flex items-center">
+                <span class="w-4 h-4 rounded-full bg-orange-500 mr-2"></span>
+                <span>Lunch</span>
+                <span class="ml-2 text-gray-600">12:00 to 01:00 PM</span>
+            </div>
+            <div class="flex items-center">
+                <span class="w-4 h-4 rounded-full bg-teal-500 mr-2"></span>
+                <span>Evening Break</span>
+                <span class="ml-2 text-gray-600">03:00 to 03:45 PM</span>
+            </div>
+        </div>
+
+        {{-- Filter Timetable Modal (based on Screenshot 2025-05-28 at 6.07.39 PM.png) --}}
+        <div id="filterTimetableModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-sm w-full p-6 relative">
+                <button id="closeFilterTimetableModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h2 class="text-xl font-semibold mb-6">Filter</h2>
+                <form id="filterTimetableForm">
+                    <div class="mb-4">
+                        <label for="filterClass" class="block text-gray-700 text-sm font-bold mb-2">Class</label>
+                        <select id="filterClass" name="filterClass" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select</option>
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-6">
+                        <label for="filterSection" class="block text-gray-700 text-sm font-bold mb-2">Section</label>
+                        <select id="filterSection" name="filterSection" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select</option>
+                            {{-- This will be populated via JavaScript based on selected class --}}
+                        </select>
+                    </div>
+
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" id="resetFilterTimetableBtn" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Reset</button>
+                        <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Apply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Add Timetable Modal (based on Screenshot 2025-05-28 at 6.08.09 PM.png) --}}
+        <div id="addTimetableModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-2xl w-full p-6 relative">
+                <button id="closeAddTimetableModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h2 class="text-xl font-semibold mb-4">Add Time Table</h2>
+                <form id="addTimetableForm" action="{{ route('school.timetable.store') }}" method="POST">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="addTimetableClass" class="block text-gray-700 text-sm font-bold mb-2">Class</label>
+                            <select id="addTimetableClass" name="class_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                                <option value="">Select</option>
+                                {{-- Will be populated by JavaScript --}}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="section" class="block text-sm font-semibold text-gray-700 mb-1">Section</label>
+                            <select id="section" name="section_id"
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-base transition duration-150 ease-in-out bg-white" required>
+                                <option value="">Select Section</option>
+                                {{-- Options will be populated by JavaScript --}}
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Day-wise timetable entry --}}
+                    <div class="mb-6">
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs" id="dayTabs">
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm active-tab" data-day="Monday">Monday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Tuesday">Tuesday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Wednesday">Wednesday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Thursday">Thursday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Friday">Friday</button>
+                                <button type="button" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-day="Saturday">Saturday</button>
+                            </nav>
+                        </div>
+                        
+
+                        <div id="dayContent" class="mt-4">
+                            {{-- Content for each day will be dynamically added/hidden --}}
+                            <div class="day-panel" id="panel-Monday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                    </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        Add New
+                                    </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                        </button>
+                                    </div>
+                                </div>
+                            <div class="day-panel hidden" id="panel-Tuesday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                        Add Extra
+                                </button>
+                                </div>
+                            </div>
+                            <div class="day-panel hidden" id="panel-Wednesday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="day-panel hidden" id="panel-Thursday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="day-panel hidden" id="panel-Friday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="day-panel hidden" id="panel-Saturday">
+                                <div class="extra-rows-container">
+                                    <!-- Extra rows will be added here -->
+                                </div>
+                                <div class="flex space-x-4 mt-4">
+                                    <button type="button" class="add-new-period-row bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                                    <button type="button" class="add-extra-row bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center">
+                                        <svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Extra
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4">
+                        <label class="inline-flex items-center mr-auto">
+                            <input type="checkbox" id="applyExtraToAll" class="form-checkbox h-5 w-5 text-blue-600">
+                            <span class="ml-2 text-sm text-gray-700">Apply extra to all</span>
+                        </label>
+                        <button type="button" id="cancelAddTimetableBtn" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+                        <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Add Time Table</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Delete Confirmation Modal (re-using student modal's concept) --}}
+        <div id="deleteTimetableEntryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-md w-full p-6 relative">
+                <h2 class="text-xl font-semibold mb-4">Confirm Delete</h2>
+                <p class="text-gray-700 mb-6">Are you sure you want to delete this timetable entry?</p>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="closeDeleteTimetableEntryModal" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+                    <button id="confirmDeleteTimetableEntryBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Add Confirmation Modal for Extra Fields --}}
+        <div id="extraFieldConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-md w-full p-6 relative">
+                <h2 class="text-xl font-semibold mb-4">Apply to All Days?</h2>
+                <p class="text-gray-700 mb-6">Would you like to apply this extra field (like break or lunch) to all days of the week?</p>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelExtraToAllBtn" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">No, Just This Day</button>
+                    <button id="confirmExtraToAllBtn" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Yes, Apply to All</button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Add Confirmation Modal for Regular Periods --}}
+        <div id="regularPeriodConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg max-w-md w-full p-6 relative">
+                <h2 class="text-xl font-semibold mb-4">Apply to All Days?</h2>
+                <p class="text-gray-700 mb-6">Would you like to apply this regular period to all days of the week?</p>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelRegularToAllBtn" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">No, Just This Day</button>
+                    <button id="confirmRegularToAllBtn" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Yes, Apply to All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@include('client.schoolPanel.layout.footer')
+
+{{-- Your custom script for this page --}}
+<script>
+    $(document).ready(function () {
+        // --- Filter Timetable Modal Logic ---
+        const filterTimetableModal = $('#filterTimetableModal');
+        const openFilterTimetableModal = $('#openFilterTimetableModal');
+        const closeFilterTimetableModal = $('#closeFilterTimetableModal');
+        const filterTimetableForm = $('#filterTimetableForm');
+        const resetFilterTimetableBtn = $('#resetFilterTimetableBtn');
+        const filterClass = $('#filterClass');
+        const filterSection = $('#filterSection');
+        
+        // --- Add Timetable Modal Logic ---
+        const addTimetableModal = $('#addTimetableModal');
+        const openAddTimetableModal = $('#openAddTimetableModal');
+        const closeAddTimetableModal = $('#closeAddTimetableModal');
+        const addTimetableForm = $('#addTimetableForm');
+        const cancelAddTimetableBtn = $('#cancelAddTimetableBtn');
+        const addTimetableClass = $('#addTimetableClass');
+        const dayTabs = $('#dayTabs');
+        const dayContent = $('#dayContent');
+
+        // Store all classes data globally
+        let allClassesData = []; // To store the fetched data globally within this scope
+        let allSubjectsData = []; // To store the fetched subjects data
+        let allTeachersData = []; // To store the fetched teachers data
+
+        // Function to fetch classes and sections from the API
+        async function fetchClassesAndSections() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/school/api/active-classes');
+                const data = await response.json();
+                if (data.success && data.classes) {
+                    allClassesData = data.classes; // Store the fetched data
+                    populateClassDropdown(allClassesData); // Populate the class dropdown
+                    populateAddTimetableClassDropdown(allClassesData); // Populate the add timetable class dropdown
+                } else {
+                    console.error('API call failed or no classes data:', data.message || 'No classes data found.');
+                }
+            } catch (error) {
+                console.error('Error fetching classes and sections:', error);
+            }
+        }
+
+        // Function to fetch subjects from the API
+        async function fetchSubjects() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/school/api/active-subjects');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allSubjectsData = data.subjects;
+                    console.log('Fetched subjects:', allSubjectsData);
+                    populateAllSubjectDropdowns();
+                } else {
+                    console.error('Failed to fetch subjects:', data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching subjects:', error);
+            }
+        }
+
+        // Function to fetch teachers from the API
+        async function fetchTeachers() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/school/api/active-teachers');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allTeachersData = data.teachers;
+                    console.log('Fetched teachers:', allTeachersData);
+                    
+                    // Log if subject_id is present for debugging
+                    if (allTeachersData.length > 0) {
+                        console.log('First teacher subject_id:', allTeachersData[0].subject_id);
+                    }
+                } else {
+                    console.error('Failed to fetch teachers:', data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching teachers:', error);
+            }
+        }
+
+        // Function to populate all subject dropdowns in the form
+        function populateAllSubjectDropdowns() {
+            // Find all subject select elements by their ID pattern or class
+            const subjectSelects = $('select[id$="Subject"]');
+            
+            subjectSelects.each(function() {
+                populateSubjectDropdown($(this));
+            });
+        }
+
+        // Function to populate teacher dropdown based on selected subject
+        function populateTeacherDropdown(teacherSelect, subjectId) {
+            teacherSelect.html('<option value="">Select Teacher</option>'); // Clear existing options
+            
+            if (!subjectId) return;
+            
+            console.log(`Filtering teachers for subject ID: ${subjectId}`);
+            
+            // Filter teachers by the selected subject
+            const relevantTeachers = allTeachersData.filter(teacher => {
+                return teacher.subject_id == subjectId;
+            });
+            
+            if (relevantTeachers.length > 0) {
+                relevantTeachers.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.value = teacher.id;
+                    option.textContent = teacher.name;
+                    teacherSelect.append(option);
+                });
+                console.log(`Found ${relevantTeachers.length} teachers for subject ID ${subjectId}`);
+            } else {
+                console.log(`No teachers found for subject ID ${subjectId}`);
+                // Show a message that no teachers are found for this subject
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "No teachers for this subject";
+                option.disabled = true;
+                teacherSelect.append(option);
+            }
+        }
+        
+        // Function to populate a subject dropdown
+        function populateSubjectDropdown(selectElement) {
+            selectElement.html('<option value="">Select Subject</option>'); // Clear existing options
+            
+            allSubjectsData.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject.id;
+                option.textContent = subject.name;
+                selectElement.append(option);
+            });
+            
+            // Add change event to load teachers based on selected subject
+            selectElement.off('change').on('change', function() {
+                const selectedSubjectId = $(this).val();
+                const dayPeriodMatch = $(this).attr('id').match(/^(\w+)Subject(\d*)$/);
+                
+                if (dayPeriodMatch) {
+                    const day = dayPeriodMatch[1];
+                    const periodIndex = dayPeriodMatch[2];
+                    const teacherSelectId = `#${day}Teacher${periodIndex}`;
+                    populateTeacherDropdown($(teacherSelectId), selectedSubjectId);
+                }
+            });
+        }
+
+        // Function to populate the Class dropdown with unique class names
+        function populateClassDropdown(data) {
+            const uniqueClasses = {};
+            data.forEach(item => {
+                uniqueClasses[item.name] = true;
+            });
+
+            filterClass.html('<option value="">Select Class</option>'); // Clear existing options
+            Object.keys(uniqueClasses).forEach(className => {
+                const option = document.createElement('option');
+                option.value = className;
+                option.textContent = className;
+                filterClass.append(option);
+            });
+        }
+
+        // Function to populate the Add Timetable Class dropdown with unique class names
+        function populateAddTimetableClassDropdown(data) {
+            addTimetableClass.html('<option value="">Select Class</option>'); // Clear existing options
+            
+            // Group by name and use the first ID for each unique name
+            const classesByName = {};
+            data.forEach(item => {
+                if (!classesByName[item.name]) {
+                    classesByName[item.name] = item.id;
+                }
+            });
+            
+            // Add options with ID as value and name as text
+            Object.keys(classesByName).forEach(className => {
+                const option = document.createElement('option');
+                option.value = classesByName[className]; // Use the class ID as value
+                option.textContent = className;
+                addTimetableClass.append(option);
+            });
+        }
+
+        // Function to populate the Section dropdown based on the selected class name
+        function populateSectionDropdown(selectedClassName, sectionDropdown, data) {
+            sectionDropdown.html('<option value="">Select Section</option>'); // Clear and add default
+            if (selectedClassName) {
+                const filteredSections = data.filter(item => item.name === selectedClassName);
+                // Use a Set to ensure unique sections for the selected class if there are duplicates
+                const uniqueSectionsForClass = new Set();
+                filteredSections.forEach(item => {
+                    if (item.section && !uniqueSectionsForClass.has(item.section.id)) {
+                        const option = document.createElement('option');
+                        option.value = item.section.id;
+                        option.textContent = item.section.name;
+                        sectionDropdown.append(option);
+                        uniqueSectionsForClass.add(item.section.id);
+                    }
+                });
+            }
+        }
+
+        // Initial calls to fetch data and populate dropdowns
+        fetchClassesAndSections();
+        fetchSubjects();
+        fetchTeachers();
+        
+        // Event listener for filter Class dropdown change
+        filterClass.on('change', function() {
+            populateSectionDropdown($(this).val(), filterSection, allClassesData);
+        });
+
+        // Event listener for addTimetable Class dropdown change
+        addTimetableClass.on('change', function() {
+            const selectedClassId = $(this).val();
+            
+            console.log('Selected class ID:', selectedClassId);
+            
+            if (selectedClassId) {
+                // Fetch sections for the selected class ID
+                $.ajax({
+                    url: `/school/timeTable/sections/${selectedClassId}`,
+                    method: 'GET',
+                    success: function(response) {
+                        console.log('Sections API response:', response);
+                        
+                        if (response.success && response.sections && response.sections.length > 0) {
+                            const sectionDropdown = $('#section');
+                            sectionDropdown.html('<option value="">Select Section</option>');
+                            
+                            response.sections.forEach(section => {
+                                console.log('Adding section:', section);
+                                const option = document.createElement('option');
+                                option.value = section.id;
+                                option.textContent = section.name;
+                                sectionDropdown.append(option);
+                            });
+                        } else {
+                            console.log('No sections found for this class or API returned failure, trying fallback');
+                            fetchAllActiveSections();
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Error fetching sections:', xhr.responseText);
+                        // If there's an error, try the fallback
+                        fetchAllActiveSections();
+                    }
+                });
+            } else {
+                // Clear the sections dropdown if no class is selected
+                $('#section').html('<option value="">Select Section</option>');
+            }
+        });
+        
+        // Function to populate section dropdown
+        function populateSectionDropdown(sections) {
+            const sectionDropdown = $('#section');
+            sectionDropdown.html('<option value="">Select Section</option>');
+            
+            if (sections.length === 0) {
+                console.log('No sections found');
+                sectionDropdown.append('<option value="" disabled>No sections found</option>');
+            } else {
+                sections.forEach(section => {
+                    console.log('Adding section:', section);
+                    const option = document.createElement('option');
+                    option.value = section.id;
+                    option.textContent = section.name;
+                    sectionDropdown.append(option);
+                });
+            }
+        }
+        
+        // Restore filter modal functionality
+        openFilterTimetableModal.on('click', function() {
+            filterTimetableModal.removeClass('hidden'); // This line makes it visible
+        });
+
+        closeFilterTimetableModal.on('click', function() {
+            filterTimetableModal.addClass('hidden'); // This line hides it
+        });
+
+        resetFilterTimetableBtn.on('click', function() {
+            filterTimetableForm[0].reset();
+            filterSection.html('<option value="">Select</option>');
+        });
+
+        filterTimetableForm.on('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading indicator
+            const submitButton = $(this).find('button[type="submit"]');
+            const originalButtonText = submitButton.text();
+            submitButton.text('Applying...').prop('disabled', true);
+            
+            // Get form data
+            const formData = $(this).serialize();
+            
+            // Make the AJAX request
+            $.ajax({
+                url: '{{ route("school.timetable.filter") }}',
+                type: 'GET',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // Update the timetable display with filtered data
+                        updateTimetableDisplay(response.data);
+                        filterTimetableModal.addClass('hidden');
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: response.message || 'Failed to apply filters',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Filter error:', xhr);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An error occurred while applying filters',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function() {
+                    // Reset button state
+                    submitButton.text(originalButtonText).prop('disabled', false);
+                }
+            });
+        });
+        
+        function updateTimetableDisplay(timetableData) {
+            // This function will update the timetable grid with the filtered data
+            console.log('Updating timetable with:', timetableData);
+            
+            // Implementation will depend on your timetable structure
+            // This is a placeholder implementation
+            const timetableBody = $('table tbody');
+            timetableBody.empty();
+            
+            // Example structure for a timetable row
+            if (timetableData.length === 0) {
+                // No data found
+                timetableBody.append(`
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            No timetable entries found for the selected criteria
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+            
+            // Group periods by time slots
+            const timeSlotMap = {};
+            timetableData.forEach(period => {
+                const timeKey = `${period.start_time} - ${period.end_time}`;
+                if (!timeSlotMap[timeKey]) {
+                    timeSlotMap[timeKey] = {
+                        timeSlot: timeKey,
+                        days: {
+                            'Monday': null,
+                            'Tuesday': null,
+                            'Wednesday': null,
+                            'Thursday': null,
+                            'Friday': null,
+                            'Saturday': null
+                        }
+                    };
+                }
+                timeSlotMap[timeKey].days[period.day] = period;
+            });
+            
+            // Convert map to sorted array of time slots
+            const timeSlots = Object.values(timeSlotMap).sort((a, b) => {
+                const aTime = a.timeSlot.split(' - ')[0];
+                const bTime = b.timeSlot.split(' - ')[0];
+                return aTime.localeCompare(bTime);
+            });
+            
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            
+            timeSlots.forEach(slot => {
+                let row = `<tr><td class="px-4 py-2 whitespace-nowrap font-medium text-gray-900">${slot.timeSlot}</td>`;
+                
+                days.forEach(day => {
+                    const period = slot.days[day];
+                    
+                    if (period) {
+                        // Period found for this day and time
+                        if (period.period_type === 'regular') {
+                            // Regular period with subject and teacher
+                            row += `
+                                <td class="px-4 py-2">
+                                    <div class="p-2 rounded-md ${getSubjectBackgroundColor(period.subject)}">
+                                        <p class="text-xs text-gray-700 font-semibold mb-1">${slot.timeSlot.split(' - ')[0]}</p>
+                                        <p class="text-sm font-medium text-gray-900">Subject: ${period.subject}</p>
+                                        <p class="text-xs text-gray-600">${period.teacher}</p>
+                                        <div class="flex justify-end mt-1 space-x-1">
+                                            <button class="text-blue-500 hover:text-blue-700 text-xs editTimetableEntryBtn" data-id="${period.id}">Edit</button>
+                                            <button class="text-red-500 hover:text-red-700 text-xs deleteTimetableEntryBtn" data-id="${period.id}">Delete</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            `;
+                        } else {
+                            // Extra period (break, lunch, etc.)
+                            row += `
+                                <td class="px-4 py-2">
+                                    <div class="p-2 rounded-md bg-gray-100">
+                                        <p class="text-xs text-gray-700 font-semibold mb-1">${slot.timeSlot.split(' - ')[0]}</p>
+                                        <p class="text-sm font-medium text-gray-900">${period.name}</p>
+                                        <div class="flex justify-end mt-1 space-x-1">
+                                            <button class="text-blue-500 hover:text-blue-700 text-xs editTimetableEntryBtn" data-id="${period.id}">Edit</button>
+                                            <button class="text-red-500 hover:text-red-700 text-xs deleteTimetableEntryBtn" data-id="${period.id}">Delete</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            `;
+                        }
+                    } else {
+                        // No period for this slot
+                        row += `
+                            <td class="px-4 py-2">
+                                <div class="p-2 text-center text-gray-400 text-xs">
+                                    No Class
+                                </div>
+                            </td>
+                        `;
+                    }
+                });
+                
+                row += `</tr>`;
+                timetableBody.append(row);
+            });
+        }
+        
+        function findPeriod(timetableData, day, timeSlot) {
+            // This is a placeholder implementation - adapt to your actual data structure
+            const startTime = timeSlot.split(' - ')[0].trim();
+            return timetableData.find(period => 
+                period.day === day && 
+                period.start_time === convertTimeFormat(startTime)
+            );
+        }
+        
+        function convertTimeFormat(timeString) {
+            // Convert from "09:00 AM" to "09:00"
+            // This is a simple implementation and might need adjustment
+            return timeString.replace(/\s(AM|PM)$/, '');
+        }
+        
+        function getSubjectBackgroundColor(subject) {
+            // Assign different background colors based on subject
+            if (!subject) return 'bg-gray-100';
+            
+            if (subject.includes('Math')) return 'bg-blue-100';
+            if (subject.includes('Computer')) return 'bg-green-100';
+            if (subject.includes('Physics')) return 'bg-yellow-100';
+            if (subject.includes('English')) return 'bg-purple-100';
+            if (subject.includes('Spanish')) return 'bg-pink-100';
+            if (subject.includes('Chemistry')) return 'bg-red-100';
+            
+            // Default color
+            return 'bg-gray-100';
+        }
+
+        // --- Add Timetable Modal Logic ---
+        const addTimetableModal = $('#addTimetableModal');
+        const openAddTimetableModal = $('#openAddTimetableModal');
+        const closeAddTimetableModal = $('#closeAddTimetableModal');
+        const addTimetableForm = $('#addTimetableForm');
+        const cancelAddTimetableBtn = $('#cancelAddTimetableBtn');
+        const dayTabs = $('#dayTabs');
+        const dayContent = $('#dayContent');
+
+        openAddTimetableModal.on('click', function() {
+            console.log('Add Timetable button clicked');
+            addTimetableForm[0].reset(); // Clear form fields
+            // Uncheck the "Apply extra to all" checkbox by default
+            $('#applyExtraToAll').prop('checked', false);
+            
+            // Set Monday as active tab by default and show its content
+            dayTabs.find('.tab-button').removeClass('active-tab border-blue-600 text-blue-600').addClass('border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300');
+            dayTabs.find('[data-day="Monday"]').addClass('active-tab border-blue-600 text-blue-600');
+            dayContent.children('.day-panel').addClass('hidden');
+            dayContent.children('#panel-Monday').removeClass('hidden');
+
+            // Show the modal
+            addTimetableModal.removeClass('hidden');
+            console.log('Add Timetable modal should be visible now');
+        });
+
+        closeAddTimetableModal.on('click', function() {
+            addTimetableForm[0].reset();
+            $('#section').html('<option value="">Select</option>');
+            addTimetableModal.addClass('hidden'); // This line hides it
+        });
+
+        cancelAddTimetableBtn.on('click', function() {
+            addTimetableForm[0].reset();
+            $('#section').html('<option value="">Select</option>');
+            addTimetableModal.addClass('hidden'); // This line hides it
+        });
+
+        addTimetableForm.on('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate form
+            let isValid = true;
+            const requiredFields = $(this).find('[required]');
+            requiredFields.each(function() {
+                if (!$(this).val()) {
+                    $(this).addClass('border-red-500');
+                    isValid = false;
+                } else {
+                    $(this).removeClass('border-red-500');
+                }
+            });
+            
+            if (!isValid) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Please fill in all required fields',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            // Check if at least one period is added
+            let hasPeriods = false;
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            days.forEach(day => {
+                const dayPanel = $(`#panel-${day}`);
+                if (dayPanel.find('.timetable-period-row').length > 0) {
+                    hasPeriods = true;
+                }
+            });
+            
+            if (!hasPeriods) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Please add at least one period to the timetable',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            // Show loading state
+            const submitButton = $(this).find('button[type="submit"]');
+            const originalButtonText = submitButton.text();
+            submitButton.text('Saving...').prop('disabled', true);
+            
+            // Collect all form data
+            const formData = new FormData(this);
+            
+            // Add all regular and extra periods to formData
+            days.forEach(day => {
+                const dayPanel = $(`#panel-${day}`);
+                const periodRows = dayPanel.find('.timetable-period-row');
+                
+                periodRows.each(function(index) {
+                    const $row = $(this);
+                    
+                    // Check if this is a regular period (has subject and teacher) or extra period (has name)
+                    if ($row.find('select[id$="Subject"]').length > 0) {
+                        // Regular period
+                        const subjectId = $row.find('select[id$="Subject"]').val();
+                        const teacherId = $row.find('select[id$="Teacher"]').val();
+                        const timeFrom = $row.find('input[id$="TimeFrom"]').val();
+                        const timeTo = $row.find('input[id$="TimeTo"]').val();
+                        
+                        if (subjectId && teacherId && timeFrom && timeTo) {
+                            console.log(`Adding regular period: subject=${subjectId}, teacher=${teacherId}, time=${timeFrom}-${timeTo}`);
+                            formData.append(`periods[${day}][${index}][subject]`, subjectId);
+                            formData.append(`periods[${day}][${index}][teacher]`, teacherId);
+                            formData.append(`periods[${day}][${index}][time_from]`, timeFrom);
+                            formData.append(`periods[${day}][${index}][time_to]`, timeTo);
+                        }
+                    } else if ($row.find('input[id$="Name"]').length > 0) {
+                        // Extra period
+                        const name = $row.find('input[id$="Name"]').val();
+                        const timeFrom = $row.find('input[id$="TimeFrom"]').val();
+                        const timeTo = $row.find('input[id$="TimeTo"]').val();
+                        
+                        if (name && timeFrom && timeTo) {
+                            formData.append(`periods[${day}][${index}][name]`, name);
+                            formData.append(`periods[${day}][${index}][time_from]`, timeFrom);
+                            formData.append(`periods[${day}][${index}][time_to]`, timeTo);
+                        }
+                    }
+                });
+            });
+            
+            // Submit form via AJAX
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Timetable added successfully',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            // Refresh the page or update the UI
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: response.message || 'Failed to add timetable',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'An error occurred while saving the timetable';
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        const errors = xhr.responseJSON.errors;
+                        errorMessage = Object.values(errors).flat().join('\n');
+                    }
+                    
+                    Swal.fire({
+                        title: 'Error',
+                        text: errorMessage,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function() {
+                    // Reset button state
+                    submitButton.text(originalButtonText).prop('disabled', false);
+                }
+            });
+        });
+
+        // Day Tabs functionality
+        dayTabs.on('click', '.tab-button', function() {
+            const selectedDay = $(this).data('day');
+
+            // Deactivate all tabs and hide all panels
+            dayTabs.find('.tab-button').removeClass('active-tab border-blue-600 text-blue-600').addClass('border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300');
+            dayContent.children('.day-panel').addClass('hidden');
+
+            // Activate selected tab and show its panel
+            $(this).addClass('active-tab border-blue-600 text-blue-600');
+            $('#panel-' + selectedDay).removeClass('hidden');
+            
+            // Only sync if "Apply extra to all" is checked
+            if ($('#applyExtraToAll').is(':checked')) {
+                console.log(`Tab switched to ${selectedDay} - synchronizing extra fields`);
+                updateExtraFieldsVisibility();
+            } else {
+                console.log(`Tab switched to ${selectedDay} - not synchronizing (checkbox not checked)`);
+            }
+        });
+
+        // Add New Period Row (for day-wise entry)
+        $(document).on('click', '.add-new-period-row', function() {
+            // Store the current day
+            const currentDayPanel = $(this).closest('.day-panel');
+            const day = currentDayPanel.attr('id').replace('panel-', ''); // Get day from panel ID
+
+            // Get current number of rows for this day to determine index
+            const currentRowCount = currentDayPanel.find('.timetable-period-row').length;
+            const newIndex = currentRowCount;
+
+            const newRow = `
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4 timetable-period-row">
+                    <div>
+                        <label for="${day}Subject${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Subject</label>
+                        <select id="${day}Subject${newIndex}" name="periods[${day}][${newIndex}][subject]" class="subject-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select</option>
+                            <!-- Will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="${day}Teacher${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Teacher</label>
+                        <select id="${day}Teacher${newIndex}" name="periods[${day}][${newIndex}][teacher]" class="teacher-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select</option>
+                            <!-- Will be populated based on subject -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="${day}TimeFrom${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time From</label>
+                        <input type="time" id="${day}TimeFrom${newIndex}" name="periods[${day}][${newIndex}][time_from]" class="time-from-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-full">
+                            <label for="${day}TimeTo${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time To</label>
+                            <input type="time" id="${day}TimeTo${newIndex}" name="periods[${day}][${newIndex}][time_to]" class="time-to-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        </div>
+                        <button type="button" class="remove-period-row text-red-500 hover:text-red-700 mt-8">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l/.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Insert new row into the extra-rows-container
+            currentDayPanel.find('.extra-rows-container').append(newRow);
+            
+            // Initialize the new dropdowns
+            populateSubjectDropdown($(`#${day}Subject${newIndex}`));
+        });
+
+        // Function to handle the "Apply extra to all" functionality
+        function updateExtraFieldsVisibility() {
+            if (!$('#applyExtraToAll').is(':checked')) {
+                console.log("Apply extra to all is not checked, skipping synchronization");
+                return; // Exit the function if the checkbox is not checked
+            }
+            
+            console.log("Running updateExtraFieldsVisibility");
+            // Collect all extra rows from all days
+            const allExtraRows = [];
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            
+            // First collect all extra rows from all days
+            days.forEach(day => {
+                const dayPanel = $(`#panel-${day}`);
+                const extraRows = dayPanel.find('.timetable-period-row').filter(function() {
+                    // Get rows that have a name input field (which identifies them as extra rows)
+                    return $(this).find('input[id$="Name"]').length > 0;
+                });
+                
+                console.log(`Found ${extraRows.length} extra rows in ${day}`);
+                
+                extraRows.each(function() {
+                    const rowData = {
+                        day: day,
+                        html: $(this).clone(),
+                        nameValue: $(this).find('input[id$="Name"]').val(),
+                        timeFromValue: $(this).find('input[id$="TimeFrom"]').val(),
+                        timeToValue: $(this).find('input[id$="TimeTo"]').val()
+                    };
+                    allExtraRows.push(rowData);
+                });
+            });
+            
+            console.log(`Total extra rows collected: ${allExtraRows.length}`);
+            
+            // Only proceed with synchronization if we found any extra rows
+            if (allExtraRows.length > 0) {
+                // Now sync these rows to all days
+                days.forEach(day => {
+                    const dayPanel = $(`#panel-${day}`);
+                    
+                    // Remove existing extra rows from this day
+                    const existingExtraRows = dayPanel.find('.timetable-period-row').filter(function() {
+                        return $(this).find('input[id$="Name"]').length > 0;
+                    });
+                    console.log(`Removing ${existingExtraRows.length} existing extra rows from ${day}`);
+                    existingExtraRows.remove();
+                    
+                    // Add all collected extra rows to this day
+                    allExtraRows.forEach((rowData, index) => {
+                        // Create a unique index for this extra row
+                        const newIndex = 'extra' + index;
+                        
+                        const newRow = `
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-4 timetable-period-row">
+                        <div>
+                                    <label for="${day}Name${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
+                                    <input type="text" id="${day}Name${newIndex}" name="periods[${day}][${newIndex}][name]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Break, Lunch, etc." value="${rowData.nameValue || ''}">
+                                </div>
+                                <div>
+                                    <label for="${day}TimeFrom${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time From</label>
+                                    <input type="time" id="${day}TimeFrom${newIndex}" name="periods[${day}][${newIndex}][time_from]" class="time-from-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="${rowData.timeFromValue || ''}">
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-full">
+                            <label for="${day}TimeTo${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time To</label>
+                                        <input type="time" id="${day}TimeTo${newIndex}" name="periods[${day}][${newIndex}][time_to]" class="time-to-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="${rowData.timeToValue || ''}">
+                        </div>
+                        <button type="button" class="remove-period-row text-red-500 hover:text-red-700 mt-8">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+                        
+                        dayPanel.find('.extra-rows-container').append(newRow);
+                    });
+                });
+                
+                // Show success message
+                Swal.fire({
+                    title: 'Success',
+                    text: 'Extra fields synchronized across all days',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } else {
+                console.log("No extra rows found to synchronize");
+            }
+        }
+        
+        // Watch for changes to the "Apply extra to all" checkbox
+        $('#applyExtraToAll').on('change', function() {
+            if ($(this).is(':checked')) {
+                console.log('Checkbox checked - synchronizing extra fields');
+                
+                // Show confirmation to the user
+                Swal.fire({
+                    title: 'Synchronize Fields',
+                    text: 'This will synchronize all existing extra fields across all days. Continue?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, synchronize'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // User confirmed, proceed with synchronization
+                        updateExtraFieldsVisibility();
+                        
+                        Swal.fire(
+                            'Synchronized!',
+                            'All extra fields have been synchronized across days.',
+                            'success'
+                        );
+                    } else {
+                        // User cancelled, uncheck the box
+                        $(this).prop('checked', false);
+                    }
+                });
+            } else {
+                console.log('Checkbox unchecked - synchronization disabled');
+                // When unchecked, show a message about disabling synchronization
+                Swal.fire({
+                    title: 'Synchronization Disabled',
+                    text: 'Extra fields will no longer be synchronized across days. Existing fields will remain as they are.',
+                    icon: 'info',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+        });
+
+        // Variable declarations for the extra field confirmation modal
+        const extraFieldConfirmModal = $('#extraFieldConfirmModal');
+        const confirmExtraToAllBtn = $('#confirmExtraToAllBtn');
+        const cancelExtraToAllBtn = $('#cancelExtraToAllBtn');
+        let currentExtraDay = null;
+        
+        // Add Extra Row (for breaks, etc.)
+        $(document).off('click', '.add-extra-row').on('click', '.add-extra-row', function() {
+            // Store the current day
+            const currentDayPanel = $(this).closest('.day-panel');
+            const day = currentDayPanel.attr('id').replace('panel-', '');
+            currentExtraDay = day;
+            
+            // Show the confirmation modal
+            extraFieldConfirmModal.removeClass('hidden');
+        });
+        
+        // When user confirms adding to all days
+        confirmExtraToAllBtn.on('click', function() {
+            // Hide the modal
+            extraFieldConfirmModal.addClass('hidden');
+            
+            // Set the checkbox to checked
+            $('#applyExtraToAll').prop('checked', true);
+            
+            // Add the extra row to the current day and all other days
+            addExtraRow(currentExtraDay, true);
+            
+            // Reset current day
+            currentExtraDay = null;
+        });
+        
+        // When user cancels adding to all days
+        cancelExtraToAllBtn.on('click', function() {
+            // Hide the modal
+            extraFieldConfirmModal.addClass('hidden');
+            
+            // Make sure checkbox is unchecked
+            $('#applyExtraToAll').prop('checked', false);
+            
+            // Add the extra row to only the current day
+            addExtraRow(currentExtraDay, false);
+            
+            // Reset current day
+            currentExtraDay = null;
+        });
+        
+        // Function to add an extra row
+        function addExtraRow(day, applyToAll) {
+            if (!day) return;
+            
+            const currentDayPanel = $(`#panel-${day}`);
+            
+            // Get current number of rows for this day to determine index
+            const currentRowCount = currentDayPanel.find('.timetable-period-row').length;
+            const newIndex = 'extra' + currentRowCount;
+
+            const newRow = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-4 timetable-period-row">
+                    <div>
+                        <label for="${day}Name${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
+                        <input type="text" id="${day}Name${newIndex}" name="periods[${day}][${newIndex}][name]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Break, Lunch, etc.">
+                    </div>
+                    <div>
+                        <label for="${day}TimeFrom${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time From</label>
+                        <input type="time" id="${day}TimeFrom${newIndex}" name="periods[${day}][${newIndex}][time_from]" class="time-from-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-full">
+                            <label for="${day}TimeTo${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time To</label>
+                            <input type="time" id="${day}TimeTo${newIndex}" name="periods[${day}][${newIndex}][time_to]" class="time-to-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        </div>
+                        <button type="button" class="remove-period-row text-red-500 hover:text-red-700 mt-8">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Add the row to the current day
+            currentDayPanel.find('.extra-rows-container').append(newRow);
+            
+            // If not applying to all days, exit here
+            if (!applyToAll) {
+                console.log("Only adding extra row to current day:", day);
+                return;
+            }
+            
+            console.log("Adding extra row to all days");
+            
+            // Add this same row to all other days
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            days.forEach(otherDay => {
+                if (otherDay !== day) { // Skip the current day
+                    const otherDayPanel = $(`#panel-${otherDay}`);
+                    
+                    // Use the same index to keep them in sync
+                    const otherRow = `
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-4 timetable-period-row">
+                            <div>
+                                <label for="${otherDay}Name${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
+                                <input type="text" id="${otherDay}Name${newIndex}" name="periods[${otherDay}][${newIndex}][name]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Break, Lunch, etc.">
+                            </div>
+                            <div>
+                                <label for="${otherDay}TimeFrom${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time From</label>
+                                <input type="time" id="${otherDay}TimeFrom${newIndex}" name="periods[${otherDay}][${newIndex}][time_from]" class="time-from-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-full">
+                                    <label for="${otherDay}TimeTo${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time To</label>
+                                    <input type="time" id="${otherDay}TimeTo${newIndex}" name="periods[${otherDay}][${newIndex}][time_to]" class="time-to-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                </div>
+                                <button type="button" class="remove-period-row text-red-500 hover:text-red-700 mt-8">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    otherDayPanel.find('.extra-rows-container').append(otherRow);
+                }
+            });
+            
+            // Set up data binding between identical fields across days
+            const nameInput = $(`#${day}Name${newIndex}`);
+            const timeFromInput = $(`#${day}TimeFrom${newIndex}`);
+            const timeToInput = $(`#${day}TimeTo${newIndex}`);
+            
+            // When user types in the original field, update all corresponding fields
+            nameInput.on('input', function() {
+                const value = $(this).val();
+                days.forEach(otherDay => {
+                    if (otherDay !== day) {
+                        $(`#${otherDay}Name${newIndex}`).val(value);
+                    }
+                });
+            });
+            
+            timeFromInput.on('change', function() {
+                const value = $(this).val();
+                days.forEach(otherDay => {
+                    if (otherDay !== day) {
+                        $(`#${otherDay}TimeFrom${newIndex}`).val(value);
+                    }
+                });
+            });
+            
+            timeToInput.on('change', function() {
+                const value = $(this).val();
+                days.forEach(otherDay => {
+                    if (otherDay !== day) {
+                        $(`#${otherDay}TimeTo${newIndex}`).val(value);
+                    }
+                });
+            });
+        }
+
+        // Remove Period Row
+        $(document).off('click', '.remove-period-row').on('click', '.remove-period-row', function() {
+            const row = $(this).closest('.timetable-period-row');
+            
+            // Check if this is an extra row (has a Name input)
+            const isExtraRow = row.find('input[id$="Name"]').length > 0;
+            
+            // Only remove from all days if checkbox is checked
+            if (isExtraRow && $('#applyExtraToAll').is(':checked')) {
+                console.log("Removing extra row from all days");
+                
+                // Get the ID of the name input to identify this row across days
+                const nameInputId = row.find('input[id$="Name"]').attr('id');
+                if (nameInputId) {
+                    // Extract the day and index from the ID
+                    const matches = nameInputId.match(/^(\w+)Name(extra\d+)$/);
+                    if (matches && matches.length === 3) {
+                        const day = matches[1];
+                        const index = matches[2];
+                        
+                        // Remove this row from all days
+                        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        days.forEach(otherDay => {
+                            if (otherDay !== day) { // Skip the current day as we'll remove it separately
+                                const otherNameInputId = `${otherDay}Name${index}`;
+                                const otherRow = $(`#${otherNameInputId}`).closest('.timetable-period-row');
+                                otherRow.remove();
+                            }
+                        });
+                    }
+                }
+            } else if (isExtraRow) {
+                console.log("Removing extra row from current day only (checkbox not checked)");
+            }
+            
+            // Remove the current row
+            row.remove();
+        });
+
+
+        // --- Delete Timetable Entry Modal Logic ---
+        const deleteTimetableEntryModal = $('#deleteTimetableEntryModal');
+        const closeDeleteTimetableEntryModal = $('#closeDeleteTimetableEntryModal');
+        const confirmDeleteTimetableEntryBtn = $('#confirmDeleteTimetableEntryBtn');
+        let timetableEntryToDeleteId = null;
+
+        $(document).on('click', '.deleteTimetableEntryBtn', function(e) {
+            e.preventDefault();
+            timetableEntryToDeleteId = $(this).data('id'); // Get ID from data attribute
+            deleteTimetableEntryModal.removeClass('hidden');
+        });
+
+        closeDeleteTimetableEntryModal.on('click', function() {
+            deleteTimetableEntryModal.addClass('hidden');
+            timetableEntryToDeleteId = null;
+        });
+
+        confirmDeleteTimetableEntryBtn.on('click', function() {
+            if (timetableEntryToDeleteId) {
+                // Show loading state
+                const deleteButton = $(this);
+                const originalButtonText = deleteButton.text();
+                deleteButton.text('Deleting...').prop('disabled', true);
+                
+                // Send AJAX request to delete the period
+                $.ajax({
+                    url: `/school/timetable/period/${timetableEntryToDeleteId}`,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            deleteTimetableEntryModal.addClass('hidden');
+                            
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: 'The timetable entry has been deleted.',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                // Refresh the table or remove the row
+                                location.reload(); // Simple refresh for now
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: response.message || 'Failed to delete the entry',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'An error occurred while deleting the entry',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    },
+                    complete: function() {
+                        // Reset button state
+                        deleteButton.text(originalButtonText).prop('disabled', false);
+                    }
+                });
+            }
+        });
+
+        // --- Edit Timetable Entry Logic ---
+        $(document).on('click', '.editTimetableEntryBtn', function(e) {
+            e.preventDefault();
+            const entryId = $(this).data('id');
+            alert('Editing timetable entry with ID: ' + entryId + ' (functionality to populate modal would go here)');
+            // In a real application, you would fetch the data for 'entryId'
+            // and then populate the 'addTimetableModal' with that data,
+            // changing the title to 'Edit Time Table' and changing the submit button text.
+            // For now, we'll just open the add modal as an example.
+            openAddTimetableModal.trigger('click');
+            $('#addTimetableModal h2').text('Edit Time Table');
+            $('#addTimetableForm button[type="submit"]').text('Update Time Table');
+            // Example of populating some fields if it were an edit operation
+            // $('#addTimetableClass').val('1');
+            // $('#addTimetableSection').val('A');
+            // $('#periodStartTime').val('09:00');
+            // $('#duration').val('45');
+        });
+
+        // Variables for the regular period confirmation modal
+        const regularPeriodConfirmModal = $('#regularPeriodConfirmModal');
+        const confirmRegularToAllBtn = $('#confirmRegularToAllBtn');
+        const cancelRegularToAllBtn = $('#cancelRegularToAllBtn');
+        let currentRegularDay = null;
+        
+        // Remove any existing click handlers first to avoid duplicates
+        $(document).off('click', '.add-new-period-row').on('click', '.add-new-period-row', function() {
+            // Store the current day
+            const currentDayPanel = $(this).closest('.day-panel');
+            const day = currentDayPanel.attr('id').replace('panel-', '');
+            currentRegularDay = day;
+            
+            // Show the confirmation modal
+            regularPeriodConfirmModal.removeClass('hidden');
+        });
+        
+        // When user confirms adding regular period to all days
+        confirmRegularToAllBtn.on('click', function() {
+            // Hide the modal
+            regularPeriodConfirmModal.addClass('hidden');
+            
+            // Set the checkbox to checked
+            $('#applyExtraToAll').prop('checked', true);
+            
+            // Add the regular period to the current day and all other days
+            addRegularPeriodRow(currentRegularDay, true);
+            
+            // Reset current day
+            currentRegularDay = null;
+        });
+        
+        // When user cancels adding regular period to all days
+        cancelRegularToAllBtn.on('click', function() {
+            // Hide the modal
+            regularPeriodConfirmModal.addClass('hidden');
+            
+            // Make sure checkbox is unchecked
+            $('#applyExtraToAll').prop('checked', false);
+            
+            // Add the regular period to only the current day
+            addRegularPeriodRow(currentRegularDay, false);
+            
+            // Reset current day
+            currentRegularDay = null;
+        });
+        
+        // Function to add a regular period row
+        function addRegularPeriodRow(day, applyToAll) {
+            if (!day) return;
+            
+            const currentDayPanel = $(`#panel-${day}`);
+            
+            // Get current number of rows for this day to determine index
+            const currentRowCount = currentDayPanel.find('.timetable-period-row').length;
+            const newIndex = currentRowCount;
+
+            const newRow = `
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4 timetable-period-row">
+                    <div>
+                        <label for="${day}Subject${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Subject</label>
+                        <select id="${day}Subject${newIndex}" name="periods[${day}][${newIndex}][subject]" class="subject-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select</option>
+                            <!-- Will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="${day}Teacher${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Teacher</label>
+                        <select id="${day}Teacher${newIndex}" name="periods[${day}][${newIndex}][teacher]" class="teacher-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select</option>
+                            <!-- Will be populated based on subject -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="${day}TimeFrom${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time From</label>
+                        <input type="time" id="${day}TimeFrom${newIndex}" name="periods[${day}][${newIndex}][time_from]" class="time-from-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-full">
+                            <label for="${day}TimeTo${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time To</label>
+                            <input type="time" id="${day}TimeTo${newIndex}" name="periods[${day}][${newIndex}][time_to]" class="time-to-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        </div>
+                        <button type="button" class="remove-period-row text-red-500 hover:text-red-700 mt-8">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Insert new row into the extra-rows-container
+            currentDayPanel.find('.extra-rows-container').append(newRow);
+            
+            // Initialize the new dropdowns
+            populateSubjectDropdown($(`#${day}Subject${newIndex}`));
+            
+            // If not applying to all days, exit here
+            if (!applyToAll) {
+                console.log("Only adding regular period to current day:", day);
+                return;
+            }
+            
+            console.log("Adding regular period to all days");
+            
+            // Add this same row to all other days
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            days.forEach(otherDay => {
+                if (otherDay !== day) { // Skip the current day
+                    const otherDayPanel = $(`#panel-${otherDay}`);
+                    
+                    // Use the same index to keep them in sync
+                    const otherRow = `
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4 timetable-period-row">
+                            <div>
+                                <label for="${otherDay}Subject${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Subject</label>
+                                <select id="${otherDay}Subject${newIndex}" name="periods[${otherDay}][${newIndex}][subject]" class="subject-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <option value="">Select</option>
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="${otherDay}Teacher${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Teacher</label>
+                                <select id="${otherDay}Teacher${newIndex}" name="periods[${otherDay}][${newIndex}][teacher]" class="teacher-select shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <option value="">Select</option>
+                                    <!-- Will be populated based on subject -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="${otherDay}TimeFrom${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time From</label>
+                                <input type="time" id="${otherDay}TimeFrom${newIndex}" name="periods[${otherDay}][${newIndex}][time_from]" class="time-from-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-full">
+                                    <label for="${otherDay}TimeTo${newIndex}" class="block text-gray-700 text-sm font-bold mb-2">Time To</label>
+                                    <input type="time" id="${otherDay}TimeTo${newIndex}" name="periods[${otherDay}][${newIndex}][time_to]" class="time-to-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                </div>
+                                <button type="button" class="remove-period-row text-red-500 hover:text-red-700 mt-8">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    otherDayPanel.find('.extra-rows-container').append(otherRow);
+                    
+                    // Initialize the subject dropdown for this day too
+                    populateSubjectDropdown($(`#${otherDay}Subject${newIndex}`));
+                }
+            });
+            
+            // Set up data binding between identical fields across days
+            const subjectSelect = $(`#${day}Subject${newIndex}`);
+            const teacherSelect = $(`#${day}Teacher${newIndex}`);
+            const timeFromInput = $(`#${day}TimeFrom${newIndex}`);
+            const timeToInput = $(`#${day}TimeTo${newIndex}`);
+            
+            // When user selects subject in the original field, update all corresponding fields
+            subjectSelect.on('change', function() {
+                const value = $(this).val();
+                days.forEach(otherDay => {
+                    if (otherDay !== day) {
+                        $(`#${otherDay}Subject${newIndex}`).val(value).trigger('change');
+                    }
+                });
+            });
+            
+            // When user selects teacher in the original field, update all corresponding fields
+            teacherSelect.on('change', function() {
+                const value = $(this).val();
+                days.forEach(otherDay => {
+                    if (otherDay !== day) {
+                        $(`#${otherDay}Teacher${newIndex}`).val(value);
+                    }
+                });
+            });
+            
+            // When user enters time_from in the original field, update all corresponding fields
+            timeFromInput.on('change', function() {
+                const value = $(this).val();
+                days.forEach(otherDay => {
+                    if (otherDay !== day) {
+                        $(`#${otherDay}TimeFrom${newIndex}`).val(value);
+                    }
+                });
+            });
+            
+            // When user enters time_to in the original field, update all corresponding fields
+            timeToInput.on('change', function() {
+                const value = $(this).val();
+                days.forEach(otherDay => {
+                    if (otherDay !== day) {
+                        $(`#${otherDay}TimeTo${newIndex}`).val(value);
+                    }
+                });
+            });
+        }
+
+        // Function to fetch all active sections as fallback
+        function fetchAllActiveSections() {
+            console.log('Fetching all active sections as fallback');
+            $.ajax({
+                url: `/school/api/active-sections`,
+                method: 'GET',
+                success: function(response) {
+                    console.log('All sections API response:', response);
+                    
+                    if (response.success) {
+                        const sectionDropdown = $('#section');
+                        sectionDropdown.html('<option value="">Select Section</option>');
+                        
+                        if (response.sections.length === 0) {
+                            console.log('No sections found');
+                            sectionDropdown.append('<option value="" disabled>No sections found</option>');
+                        } else {
+                            response.sections.forEach(section => {
+                                console.log('Adding section:', section);
+                                const option = document.createElement('option');
+                                option.value = section.id;
+                                option.textContent = section.name;
+                                sectionDropdown.append(option);
+                            });
+                        }
+                    } else {
+                        console.error('Failed to fetch all sections:', response.message);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error fetching all sections:', xhr.responseText);
+                }
+            });
+        }
+
+        // Debug modal elements
+        $(document).ready(function() {
+            console.log('Document ready - checking modal elements');
+            
+            // Check if the Add Timetable modal exists
+            if (addTimetableModal.length) {
+                console.log('Add Timetable modal found in DOM');
+            } else {
+                console.error('Add Timetable modal NOT found in DOM');
+            }
+            
+            // Check if the open button exists
+            if (openAddTimetableModal.length) {
+                console.log('Open Add Timetable button found in DOM');
+            } else {
+                console.error('Open Add Timetable button NOT found in DOM');
+            }
+            
+            // Add direct click handler as alternative
+            $('#openAddTimetableModal').on('click', function() {
+                console.log('Direct click handler triggered');
+                $('#addTimetableModal').removeClass('hidden');
+            });
+        });
+    });
+</script>
+
+<style>
+    /* Ensure active tab styles are applied correctly */
+    .active-tab {
+        border-color: #2563eb; /* blue-600 */
+        color: #2563eb; /* blue-600 */
+    }
+</style>

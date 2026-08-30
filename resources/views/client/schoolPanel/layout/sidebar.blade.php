@@ -1,0 +1,629 @@
+@php
+    $school = \App\Models\School::where('admin_id', auth()->id())->first();
+    $schoolId = $school ? $school->id : null;
+    
+    // Get current user
+    $user = auth()->user();
+    
+    // Debugging information - only visible to admins
+    if ($user && $user->role === 'school') {
+        \Illuminate\Support\Facades\Log::info('Sidebar Debug Info:', [
+            'user_id' => $user->id,
+            'user_role' => $user->role,
+            'user_email' => $user->email,
+            'school_id' => $schoolId,
+            'has_roles' => $user->roles->count(),
+            'role_names' => $user->roles->pluck('name')->toArray(),
+        ]);
+    }
+    
+    // Helper function to check if user has permissions in a category
+    if (!function_exists('hasPermissionsInCategory')) {
+        function hasPermissionsInCategory($user, $category) {
+            if (!$user) return false;
+            
+            // For school admin, always show everything based on user role column
+            if ($user->role === 'school') {
+                return true;
+            }
+            
+            // Check if user has any roles with relevant permissions
+            if (method_exists($user, 'roles')) {
+                // Check for school role in assigned roles
+                if ($user->roles && $user->roles->where('name', 'school')->isNotEmpty()) {
+                    return true;
+                }
+                
+                // Check for specific permissions in category
+                foreach ($user->roles as $role) {
+                    if ($role->permissions) {
+                        foreach ($role->permissions as $permission) {
+                            if ($permission->feature && stripos($permission->feature->feature_group, $category) !== false) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+    }
+@endphp
+
+
+
+
+<aside class="flex flex-col w-64 h-screen px-5 py-16 overflow-y-auto bg-white border-r border-gray-300">
+    <div class="flex flex-col justify-between flex-1 mt-6">
+        <nav x-data="{ open: {}, currentOpen: null }" class="-mx-3 space-y-6 ">
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">dashboard</label>
+
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.dashboard') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.dashboard')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Dashboard</span>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- Help & Support Menu -->
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Help & Support</label>
+                <a @click="open.helpSupport = !open.helpSupport"
+                   class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Help & Support</span>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-auto" :class="{'rotate-180': open.helpSupport}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </a>
+                <ul class="mt-1 pl-6 overflow-hidden transition-all max-h-0 duration-300" x-ref="helpSupport" x-bind:style="open.helpSupport ? 'max-height: ' + $refs.helpSupport.scrollHeight + 'px' : ''">
+                    <li>
+                        <a href="{{ route('school.helpSupport.dashboard') }}" class="flex items-center py-2 px-4 text-sm hover:bg-gray-100 {{ request()->routeIs('school.helpSupport.dashboard') ? 'text-blue-600 font-medium' : 'text-gray-700' }}">
+                            <span class="w-1 h-1 rounded-full bg-gray-500 mr-3"></span>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('school.helpTopics.index') }}" class="flex items-center py-2 px-4 text-sm hover:bg-gray-100 {{ request()->routeIs('school.helpTopics.*') ? 'text-blue-600 font-medium' : 'text-gray-700' }}">
+                            <span class="w-1 h-1 rounded-full bg-gray-500 mr-3"></span>
+                            Help Topics
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('school.supportTickets.index') }}" class="flex items-center py-2 px-4 text-sm hover:bg-gray-100 {{ request()->routeIs('school.supportTickets.*') ? 'text-blue-600 font-medium' : 'text-gray-700' }}">
+                            <span class="w-1 h-1 rounded-full bg-gray-500 mr-3"></span>
+                            Support Tickets
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            @if(hasPermissionsInCategory($user, 'general_settings'))
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">general settings</label>
+
+                @hasFeature('institute_profile', $schoolId)
+                <a class="flex items-center justify-between px-3  py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.instituteProfile') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.instituteProfile')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Institute Profile</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                @hasFeature('rules_regulations', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.rulesAndRegulations') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.rulesAndRegulations')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Rules and Regulations</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                @hasFeature('account_settings', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer  {{ Route::is('school.accSettings') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.accSettings')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Account Settings</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.termsCondition') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.termsCondition')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Terms & Conditions</span>
+                    </div>
+                </a>
+            </div>
+            @endif
+
+            @if(hasPermissionsInCategory($user, 'announcements'))
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Announcements</label>
+                
+                @hasFeature('notice_board', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.noticeBoard') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.noticeBoard')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Notice Board</span>
+                    </div>
+                </a>
+                @endhasFeature
+            </div>
+            @endif
+
+            @hasFeature('programs_events', $schoolId)
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Programs & Events</label>
+                
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.programs.*') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.programs.index')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Programs</span>
+                    </div>
+                </a>
+                
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.events.*') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.events.index')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Events</span>
+                    </div>
+                </a>
+                
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.calendar.*') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.calendar.index')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Calendar</span>
+                    </div>
+                </a>
+            </div>
+            @endhasFeature
+
+            @if(isset($user) && (hasPermissionsInCategory($user, 'role_management') || ($user->roles && $user->roles->where('name', 'school')->isNotEmpty())))
+            @hasFeature('role_management', $schoolId)
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Role Management</label>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.roleUsers') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.roleUsers')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Users</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer  {{ Route::is('school.rolesAndPermissions') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.rolesAndPermissions')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Roles and Permissions</span>
+                    </div>
+                </a>
+                
+            </div>
+            @endhasFeature
+            @endif
+
+            @if(hasPermissionsInCategory($user, 'academics'))
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Academics</label>
+                
+                @hasFeature('academic_sections', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.sections') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.sections')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Sections</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                @hasFeature('academic_classes', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.class') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.class')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Class</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                @hasFeature('academic_subjects', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.subjects') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.subjects')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Subjects</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.assignSubjects') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.assignSubjects')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Assign Subjects</span>
+                    </div>
+                </a>
+                
+                
+                  <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('admin.classes-teacher') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('admin.classes-teacher')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Class Teacher</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                @hasFeature('timetable', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.timeTable') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.timeTable')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Time Table</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                @hasFeature('homework', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.homeWork') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.homeWork')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Home Work</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                @hasFeature('attendance', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.attendance') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.attendance')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">School Attendance</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                 @hasFeature('attendance', $schoolId)
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.attendance.teacher') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.attendance.teacher')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Teacher Attendance</span>
+                    </div>
+                </a>
+                @endhasFeature
+                
+                @hasFeature('examination_management', $schoolId)
+                <a @click="currentOpen = (currentOpen === 'examinations') ? null : 'examinations'"
+                   class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Examinations</span>
+                    </div>
+                    <svg :class="{'rotate-90': currentOpen === 'examinations'}" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+                <div x-show="currentOpen === 'examinations'"
+                     x-collapse.duration.500ms
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform -translate-y-5"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     class="ml-6 space-y-2">
+                    <a class="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 {{ Route::is('school.exams.index') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.exams.index')}}">
+                        <span class="mx-2 text-sm font-medium">Exam</span>
+                    </a>
+                    <a class="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 {{ Route::is('school.examSchedule') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.examSchedule')}}">
+                        <span class="mx-2 text-sm font-medium">Exam Schedule</span>
+                    </a>
+                    <a class="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 {{ Route::is('school.grades') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.grades')}}">
+                        <span class="mx-2 text-sm font-medium">Grade</span>
+                    </a>
+                   
+                    <a class="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 {{ Route::is('school.result') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.result')}}">
+                        <span class="mx-2 text-sm font-medium">Exam Results</span>
+                    </a>
+                </div>
+                @endhasFeature
+                
+            </div>
+            @endif
+
+            @if(hasPermissionsInCategory($user, 'library'))
+            @hasFeature('library_management', $schoolId)
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Library</label>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.books.index') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{route('school.books.index')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Books</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.issueBooks') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.issueBooks')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Issue Books</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.returnBooks') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.returnBooks')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Return Books</span>
+                    </div>
+                </a>
+            </div>
+            @endhasFeature
+            @endif
+            
+            @if(hasPermissionsInCategory($user, 'hostel'))
+            @hasFeature('hostel_management', $schoolId)
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Hostel</label>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.hostelList') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.hostelList')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Hostel List</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.roomType') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.roomType')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Room Type</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.hostelRooms') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.hostelRooms')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Hostel Room</span>
+                    </div>
+                </a>
+            </div>
+            @endhasFeature
+            @endif
+            
+            @if(hasPermissionsInCategory($user, 'transport'))
+            @hasFeature('transport_management', $schoolId)
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Transport</label>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.vehicleDrivers') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.vehicleDrivers')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Vehicle / Drivers</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.vehicles') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.vehicles')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Vehicles</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.routes') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.routes')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Routes</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.assignVehicle') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.assignVehicle')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Assign Vehicle</span>
+                    </div>
+                </a>
+
+            </div>
+            @endhasFeature
+            @endif
+            
+            @if(hasPermissionsInCategory($user, 'finance'))
+            @hasFeature('finance_management', $schoolId)
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Finance</label>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.feeGroup') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.feeGroup')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Fee Group</span>
+                    </div>
+                </a>
+                 <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer " href="{{route('fee-types.index')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Fee Type</span>
+                    </div>
+                </a>
+                  <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.feeMaster') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.feeMaster')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Fee Master</span>
+                    </div>
+                </a>
+                 <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.assignFee.index') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.assignFee.index')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Assign Fee</span>
+                    </div>
+                </a>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.collectFee') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.collectFee')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Collect Fee</span>
+                    </div>
+                </a>
+
+                {{-- <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.payRoll') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.payRoll')}}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Payroll</span>
+                    </div>
+                </a> --}}
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.accountDetail.*') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{ route('school.accountDetail.index') }}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Account Details</span>
+                    </div>
+                </a>
+            </div>
+            @endhasFeature
+            @endif
+
+          
+
+            @if(hasPermissionsInCategory($user, 'peoples'))
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Peoples</label>
+                <a @click="currentOpen = (currentOpen === 'students') ? null : 'students'"
+                   class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Students</span>
+                    </div>
+                    <svg :class="{'rotate-90': currentOpen === 'students'}" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+                <div x-show="currentOpen === 'students'"
+                     x-collapse.duration.500ms
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform -translate-y-5"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     class="ml-6 space-y-2">
+                    <a class="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 {{ Route::is('school.students') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.students')}}">
+                        <span class="mx-2 text-sm font-medium">Students</span>
+                    </a>
+                    <a class="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 {{ Route::is('school.createStudent') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.createStudent')}}">
+                        <span class="mx-2 text-sm font-medium">Create Students</span>
+                    </a>
+                </div>
+                <a @click="currentOpen = (currentOpen === 'teachers') ? null : 'teachers'"
+                   class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Teachers</span>
+                    </div>
+                    <svg :class="{'rotate-90': currentOpen === 'teachers'}" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+                <div x-show="currentOpen === 'teachers'"
+                     x-collapse.duration.500ms
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform -translate-y-5"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     class="ml-6 space-y-2">
+                    <a class="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 {{ Route::is('school.teachers') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.teachers')}}">
+                        <span class="mx-2 text-sm font-medium">Teachers</span>
+                    </a>
+                    <a class="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 {{ Route::is('school.createTeacher') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{Route('school.createTeacher')}}">
+                        <span class="mx-2 text-sm font-medium">Create Teachers</span>
+                    </a>
+                </div>
+            </div>
+            @endif
+
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Student Services</label>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.complaintBox*') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{ route('school.complaintBox') }}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Complaint Box</span>
+                    </div>
+                </a>
+                
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.leaveAp') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{ route('school.leaveApplications') }}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Leave Applications</span>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- Add this section after any appropriate existing section -->
+            <div class="space-y-3">
+                <label class="px-3 text-xs text-gray-500 uppercase">Media Gallery</label>
+                <a class="flex items-center justify-between px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg hover:bg-gray-100 hover:text-gray-700 cursor-pointer {{ Route::is('school.media.*') ? 'bg-blue-100 text-gray-700' : '' }}" href="{{ route('school.media.index') }}">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                        <span class="mx-2 text-sm font-medium">Media Gallery</span>
+                    </div>
+                </a>
+            </div>
+        </nav>
+    </div>
+</aside>
+<script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>

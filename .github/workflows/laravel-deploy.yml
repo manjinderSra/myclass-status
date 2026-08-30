@@ -1,0 +1,74 @@
+name: Laravel CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - manjinder
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Step 1: Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Setup PHP
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: mbstring, bcmath, pdo_sqlite
+
+      # Step 3: Install dependencies
+      - name: Install Dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      # Step 4: Setup ENV (force correct config)
+      - name: Setup ENV
+        run: |
+          cp .env.example .env
+
+          # Force SQLite DB for CI
+          sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          sed -i 's|DB_DATABASE=.*|DB_DATABASE='$(pwd)'/database/database.sqlite|' .env
+
+          # Force file cache (avoid DB cache error)
+          sed -i 's/CACHE_DRIVER=.*/CACHE_DRIVER=file/' .env || echo "CACHE_DRIVER=file" >> .env
+
+      # Step 5: Generate app key
+      - name: Generate Key
+        run: php artisan key:generate
+
+      # Step 6: Create SQLite database
+      - name: Create SQLite DB
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+
+      # Step 7: Clear config safely (NO optimize:clear)
+      - name: Clear Cache Safely
+        run: |
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+
+      # Step 8: Deploy to EC2
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /var/www/laravel-app
+
+            git pull origin Manjinder-Latest
+
+            composer install --no-dev --optimize-autoloader
+
+            php artisan migrate --force
+
+            php artisan optimize:clear

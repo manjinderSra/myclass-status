@@ -1,0 +1,366 @@
+@include('client.schoolPanel.layout.header')
+@include('client.schoolPanel.layout.topbar')
+
+<div class="flex">
+    @include('client.schoolPanel.layout.sidebar')
+
+    <div class="flex-1 h-screen overflow-y-auto bg-gray-50">
+        <div class="px-6 py-24">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Student Details</h1>
+                </div>
+                <div class="flex space-x-2">
+                    <a href="{{ route('school.students.edit', $student->admission_number) }}" class="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 flex items-center text-white">
+                        <i class="fas fa-edit mr-2"></i> Edit Student
+                    </a>
+                </div>
+            </div>
+
+            <div x-data="{ activeTab: 'studentDetails' }">
+                <div class="bg-white rounded-lg overflow-hidden mb-6">
+                    <div class="flex border-b">
+                        <a href="#" @click.prevent="activeTab = 'studentDetails'" 
+                           :class="{ 'text-blue-600 border-blue-600': activeTab === 'studentDetails' }"
+                           class="px-4 py-3 border-b-2 font-medium flex items-center">
+                            <i class="fas fa-user mr-2"></i> Student Details
+                        </a>
+                        <a href="#" @click.prevent="activeTab = 'timetable'" 
+                           :class="{ 'text-blue-600 border-blue-600': activeTab === 'timetable' }"
+                           class="px-4 py-3 border-b-2 font-medium flex items-center">
+                            <i class="fas fa-calendar-alt mr-2"></i> Timetable
+                        </a>
+                        <a href="#" @click.prevent="activeTab = 'library'" 
+                           :class="{ 'text-blue-600 border-blue-600': activeTab === 'library' }"
+                           class="px-4 py-3 border-b-2 font-medium flex items-center">
+                            <i class="fas fa-book mr-2"></i> Library
+                        </a>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-12 gap-6">
+                    <div class="col-span-4">
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+                            <div class="p-5 flex">
+                                <div class="flex justify-center mb-4">
+                                    <div class="relative">
+                                        @if($student->profile_image)
+                                            <img src="{{ asset('storage/' . $student->profile_image) }}" alt="{{ $student->first_name }}'s Photo" class="w-32 h-32 rounded-lg object-cover">
+                                        @else
+                                            <div class="w-32 h-32 rounded-lg bg-blue-100 flex items-center justify-center text-blue-500 text-2xl font-bold">
+                                                {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="text-start mt-6 p-3">
+                                    <h2 class="text-xl font-semibold text-gray-800">{{ $student->first_name }} {{ $student->last_name }}</h2>
+                                    <p class="text-blue-600 font-medium">{{ $student->admission_number }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-span-8">
+                        <div x-show="activeTab === 'studentDetails'" class="space-y-6">
+                            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                                <div class="p-5">
+                                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Basic Information</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div x-show="activeTab === 'timetable'" class="bg-white rounded-lg shadow-sm p-6 mb-6" x-cloak
+                             x-data="studentTimetable()" 
+                             x-init="init()">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-xl font-bold text-gray-800">Timetable</h2>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <div x-show="loading" class="flex justify-center my-8">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                </div>
+                                
+                                <div x-show="error" class="text-center text-red-500 my-4" x-text="error"></div>
+                                
+                                <table x-show="!loading && !error && timeSlots.length > 0" class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr class="bg-gray-100 text-gray-700 text-left text-sm uppercase">
+                                            <th class="px-4 py-2 font-semibold">Time</th>
+                                            <th class="px-4 py-2 font-semibold">Monday</th>
+                                            <th class="px-4 py-2 font-semibold">Tuesday</th>
+                                            <th class="px-4 py-2 font-semibold">Wednesday</th>
+                                            <th class="px-4 py-2 font-semibold">Thursday</th>
+                                            <th class="px-4 py-2 font-semibold">Friday</th>
+                                            <th class="px-4 py-2 font-semibold">Saturday</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-sm text-gray-700 divide-y divide-gray-200">
+                                        <template x-for="slot in timeSlots" :key="slot.timeSlot">
+                                            <tr>
+                                                <td class="px-4 py-2 whitespace-nowrap font-medium text-gray-900" x-text="slot.timeSlot"></td>
+                                                <template x-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" :key="day">
+                                                    <td class="px-4 py-2">
+                                                        <template x-if="slot.days[day]">
+                                                            <div class="p-2 rounded-md" :class="getSubjectBackgroundColor(slot.days[day].subject_name || slot.days[day].name)">
+                                                                <p class="text-xs text-gray-700 font-semibold mb-1" x-text="slot.timeSlot.split(' - ')[0]"></p>
+                                                                <template x-if="slot.days[day].is_extra">
+                                                                    <p class="text-sm font-medium text-gray-900" x-text="slot.days[day].name"></p>
+                                                                </template>
+                                                                <template x-if="!slot.days[day].is_extra">
+                                                                    <div>
+                                                                        <p class="text-sm font-medium text-gray-900" x-text="slot.days[day].subject_name"></p>
+                                                                        <p class="text-xs text-gray-600" x-text="slot.days[day].teacher_name"></p>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="!slot.days[day]">
+                                                            <div class="p-2 text-center text-gray-400 text-xs">
+                                                                No Class
+                                                            </div>
+                                                        </template>
+                                                    </td>
+                                                </template>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div x-show="!loading && timeSlots.length === 0 && !error" class="text-center text-gray-500 my-8">
+                                No timetable entries found for this student's class.
+                            </div>
+                        </div>
+
+                        <div x-show="activeTab === 'library'" class="bg-white rounded-lg shadow-sm p-6 mb-6" x-cloak
+                             x-data="studentBooks()" 
+                             x-init="init()">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-xl font-bold text-gray-800">Library</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@include('client.schoolPanel.layout.footer')
+
+@push('scripts')
+<script>
+    function studentBooks() {
+        return {
+            currentBooks: [],
+            returnedBooks: [],
+            loading: true,
+            error: null,
+            
+            init() {
+                console.log('studentBooks init method called');
+                this.fetchIssuedBooks('{{ $student->admission_number }}');
+            },
+            
+            fetchIssuedBooks(studentId) {
+                console.log('Fetching books for student:', studentId);
+                this.loading = true;
+                
+                fetch('/school/students/' + studentId + '/issued-books')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            this.currentBooks = data.issuedBooks.filter(book => !book.is_returned);
+                            this.returnedBooks = data.issuedBooks.filter(book => book.is_returned);
+                        } else {
+                            this.error = data.message;
+                        }
+                        this.loading = false;
+                    })
+                    .catch(error => {
+                        this.error = `Failed to load issued books: ${error.message}`;
+                        this.loading = false;
+                    });
+            },
+            
+            isOverdue(dueDate) {
+                return new Date(dueDate) < new Date();
+            },
+            
+            formatDate(dateString) {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString);
+                const options = { day: '2-digit', month: 'short', year: 'numeric' };
+                return date.toLocaleDateString('en-US', options);
+            }
+        };
+    }
+    
+    function studentTimetable() {
+        return {
+            timeSlots: [],
+            loading: true,
+            error: null,
+            classId: null,
+            sectionId: null,
+            
+            init() {
+                console.log('studentTimetable init method called');
+                this.fetchStudentClass('{{ $student->admission_number }}');
+            },
+            
+            fetchStudentClass(studentId) {
+                console.log('Fetching class for student:', studentId);
+                this.loading = true;
+                this.error = null;
+                
+                fetch('/school/students/' + studentId + '/class', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    credentials: 'same-origin'
+                })
+                    .then(response => {
+                        console.log('Student class API response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Student class API response data:', data);
+                        if (data.success && data.class) {
+                            console.log('Student class data:', data.class);
+                            this.classId = data.class.id;
+                            this.sectionId = data.class.section_id;
+                            this.fetchTimetable(data.class.name, data.class.section_id);
+                        } else {
+                            this.error = data.message || 'No class information found for this student';
+                            this.loading = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching student class:', error);
+                        this.error = `Failed to load student class: ${error.message}`;
+                        this.loading = false;
+                    });
+            },
+            
+            fetchTimetable(className, sectionId) {
+                console.log(`Fetching timetable for class: ${className}, section: ${sectionId}`);
+                
+                fetch(`/school/timeTable/filter?filterClass=${encodeURIComponent(className)}&filterSection=${sectionId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    credentials: 'same-origin'
+                })
+                    .then(response => {
+                        console.log('Timetable filter API response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Timetable filter API response data:', data);
+                        if (data.success) {
+                            this.processTimetableData(data.data);
+                        } else {
+                            this.error = data.message || 'Failed to load timetable';
+                        }
+                        this.loading = false;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching timetable:', error);
+                        this.error = `Failed to load timetable: ${error.message}`;
+                        this.loading = false;
+                    });
+            },
+            
+            processTimetableData(timetableData) {
+                console.log('Processing timetable data:', timetableData);
+                
+                if (!timetableData || timetableData.length === 0) {
+                    this.timeSlots = [];
+                    return;
+                }
+                
+                // Group periods by time slots
+                const timeSlotMap = {};
+                timetableData.forEach(period => {
+                    const timeKey = `${period.start_time} - ${period.end_time}`;
+                    if (!timeSlotMap[timeKey]) {
+                        timeSlotMap[timeKey] = {
+                            timeSlot: timeKey,
+                            days: {
+                                'Monday': null,
+                                'Tuesday': null,
+                                'Wednesday': null,
+                                'Thursday': null,
+                                'Friday': null,
+                                'Saturday': null
+                            }
+                        };
+                    }
+                    
+                    // Process the period data
+                    if (period.period_type === 'regular') {
+                        timeSlotMap[timeKey].days[period.day] = {
+                            id: period.id,
+                            subject_id: period.subject,
+                            subject_name: period.subject_name || 'Unknown Subject',
+                            teacher_id: period.teacher,
+                            teacher_name: period.teacher_name || 'Unknown Teacher',
+                            is_extra: false
+                        };
+                    } else {
+                        // Extra period (break, lunch)
+                        timeSlotMap[timeKey].days[period.day] = {
+                            id: period.id,
+                            name: period.name || 'Break',
+                            is_extra: true
+                        };
+                    }
+                });
+                
+                // Convert map to sorted array of time slots
+                this.timeSlots = Object.values(timeSlotMap).sort((a, b) => {
+                    const aTime = a.timeSlot.split(' - ')[0];
+                    const bTime = b.timeSlot.split(' - ')[0];
+                    return aTime.localeCompare(bTime);
+                });
+                
+                console.log('Processed time slots:', this.timeSlots);
+            },
+            
+            getSubjectBackgroundColor(subject) {
+                if (!subject) return 'bg-gray-100';
+                
+                if (subject === 'Break' || subject === 'Lunch') return 'bg-orange-100';
+                if (subject.includes('Math')) return 'bg-blue-100';
+                if (subject.includes('Computer')) return 'bg-green-100';
+                if (subject.includes('Physics')) return 'bg-yellow-100';
+                if (subject.includes('English')) return 'bg-purple-100';
+                if (subject.includes('Spanish')) return 'bg-pink-100';
+                if (subject.includes('Chemistry')) return 'bg-red-100';
+                
+                // Default color
+                return 'bg-gray-100';
+            }
+        };
+    }
+</script>
+@endpush
