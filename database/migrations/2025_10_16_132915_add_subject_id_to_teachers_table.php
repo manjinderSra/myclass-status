@@ -19,13 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (!Schema::hasTable('teachers') || !Schema::hasColumn('teachers', 'subject_id')) {
-            return;
-        }
-
-        Schema::table('teachers', function (Blueprint $table) {
-            // Remove subject_id if we rollback
-            $table->dropColumn('subject_id');
-        });
+        // The earlier subject_id migration owns this column and its foreign key.
     }
 };

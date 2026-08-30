@@ -22,9 +22,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('schools', function (Blueprint $table) {
-            $table->dropColumn(['tagline', 'about', 'website']);
-        });
+        // The 2023 profile-fields migration owns these columns.
     }
 };
-
